@@ -34,21 +34,13 @@ ClawdClock turns your idle screen into a giant flip clock that also tracks your 
 
 It runs as a normal app, a system-tray resident, **and** a registered Windows screensaver (`.scr`).
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                   │
-│                                      CLAUDE CODE       UPDATED 2M  │
-│       ██╗  ██████╗                                                 │
-│       ███║ ██╔═████╗     ▏▏        SESSION (5H)          ████ 62%  │
-│       ╚██║ ██║██╔██║     ▏▏        resets in 1h 24m              │
-│        ██║ ████╔╝██║     ▏▏        ───────────────────────────    │
-│        ██║ ██╔══██║      ▏▏        WEEKLY (7D)           ██   31%  │
-│        ╚═╝ ╚═════╝       ▏▏        resets Mon                     │
-│                                                                   │
-│                  ▲ hover top → ⊗ exit                              │
-└─────────────────────────────────────────────────────────────────┘
-        flip clock 40%                usage panel 60%
-```
+<div align="center">
+
+![ClawdClock screensaver](src/assets/screensaver.png)
+
+*The full-screen display — flip clock on the left, live Claude Code usage on the right*
+
+</div>
 
 ---
 
@@ -90,6 +82,14 @@ It runs as a normal app, a system-tray resident, **and** a registered Windows sc
 2. Set **Activate After** to your preferred idle timeout.
 3. Hit **Preview Now** to see the clock full-screen.
 4. (Optional) Enable **Launch at Startup**.
+
+<div align="center">
+
+![ClawdClock settings](src/assets/settings.png)
+
+*Settings window with a live preview that updates as you tweak options*
+
+</div>
 
 ### Exiting the clock
 
