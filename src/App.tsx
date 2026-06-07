@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ClawdClockView } from './components/ClawdClockView/ClawdClockView';
-import { BouncingMascot } from './components/ClawdMascot/BouncingMascot';
 import { EscapeBar } from './components/EscapeBar/EscapeBar';
 import { PasswordPrompt } from './components/PasswordPrompt/PasswordPrompt';
 import { useClock } from './hooks/useClock';
@@ -80,9 +79,7 @@ export function App() {
         />
       )}
 
-      <BouncingMascot sessionPct={sessionPct} weeklyPct={weeklyPct} />
-
-      <div style={{
+<div style={{
         transform: `scale(${scale}) translate(${oledShift.x}px, ${oledShift.y}px)`,
         transformOrigin: 'center center',
         transition: oledMode ? 'transform 2s ease' : undefined,
