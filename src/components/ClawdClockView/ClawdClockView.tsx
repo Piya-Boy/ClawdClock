@@ -3,11 +3,13 @@ import { UsageSection } from '../UsagePanel/UsageSection';
 import { OllamaSection } from '../OllamaPanel/OllamaSection';
 import { ContributionGrid } from '../GitHubPanel/ContributionGrid';
 import { CIStatusBadge } from '../GitHubPanel/CIStatusBadge';
+import { OpenAISection } from '../OpenAIPanel/OpenAISection';
 import { formatTimeAgo } from '../../utils/countdown';
 import type { Theme } from '../../themes';
 import type { OllamaModel } from '../../hooks/useOllamaStatus';
 import type { ContributionDay } from '../../hooks/useGitHubContributions';
 import type { CIStatus } from '../../hooks/useCIStatus';
+import type { OpenAIUsage } from '../../hooks/useOpenAIUsage';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -29,6 +31,7 @@ interface Props {
   githubUsername?: string;
   githubDays?: ContributionDay[];
   ciStatus?: CIStatus;
+  openaiUsage?: OpenAIUsage;
 }
 
 export function ClawdClockView({
@@ -42,6 +45,7 @@ export function ClawdClockView({
   githubUsername = '',
   githubDays = [],
   ciStatus,
+  openaiUsage,
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
@@ -109,6 +113,12 @@ export function ClawdClockView({
           <>
             <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
             <CIStatusBadge ci={ciStatus} theme={theme} />
+          </>
+        )}
+        {openaiUsage?.available && (
+          <>
+            <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
+            <OpenAISection usage={openaiUsage} theme={theme} />
           </>
         )}
       </div>

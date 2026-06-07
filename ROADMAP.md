@@ -480,7 +480,7 @@ Target: Professional Setup
 
 * [x] Installation Guide
 * [x] User Guide
-* [ ] FAQ
+* [x] FAQ
 
 ## Website
 
@@ -498,6 +498,7 @@ Target: Professional Setup
 * [x] GitHub Activity
 * [x] GitHub Contributions
 * [x] CI/CD Status
+* [x] OpenAI Usage
 * [x] Ollama Usage
 
 
@@ -527,7 +528,7 @@ Target: Seamless Updates
 ### Update Channels
 
 * [x] Stable channel (GitHub releases)
-* [ ] Beta channel
+* [x] Beta channel
 * [ ] Development channel
 
 ### Update Experience
@@ -559,7 +560,7 @@ Target: Seamless Updates
 
 * [x] Enable Auto Update
 * [x] Check Frequency
-* [ ] Update Channel Selection
+* [x] Update Channel Selection
 * [x] Download Updates Automatically
 
 ### Tauri Integration

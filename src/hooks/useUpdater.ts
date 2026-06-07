@@ -55,14 +55,15 @@ export function useUpdater() {
     lastChecked: null,
   });
 
-  const { autoUpdate, checkFrequency } = useSettingsStore();
+  const { autoUpdate, checkFrequency, updateChannel } = useSettingsStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const check = async () => {
     if (import.meta.env.DEV) return;
     setState(s => ({ ...s, checking: true, error: null }));
+    const channel = useSettingsStore.getState().updateChannel;
     try {
-      const result = await invoke<{ version: string; body: string | null; download_url: string | null } | null>('check_for_update');
+      const result = await invoke<{ version: string; body: string | null; download_url: string | null } | null>('check_for_update_channel', { channel });
       let downloadSize: number | null = null;
       if (result?.download_url) {
         downloadSize = await fetchDownloadSize(result.download_url);
@@ -105,7 +106,7 @@ export function useUpdater() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoUpdate, checkFrequency]);
+  }, [autoUpdate, checkFrequency, updateChannel]);
 
   return { ...state, formatSize: (n: number) => formatBytes(n), check, install };
 }

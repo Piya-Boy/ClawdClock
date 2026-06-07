@@ -39,6 +39,18 @@ const SECTIONS = [
       { h: 'Ollama', p: 'If Ollama is running on localhost:11434, ClawdClock automatically detects it and shows active model names.' },
     ],
   },
+  {
+    title: 'FAQ',
+    content: [
+      { h: 'Why does the clock not appear?', p: 'Check that "Activate After" is not set to "Never". Click "Preview Now" to test manually. Make sure no other fullscreen app is blocking it.' },
+      { h: 'Usage shows 0% or is not updating', p: 'ClawdClock needs your Claude credentials at ~/.claude/.credentials.json. Log in to Claude Code (claude auth login) to generate this file.' },
+      { h: 'How do I exit the clock?', p: 'Move the mouse or press any key. If Lock Screen Mode is enabled with a password, you must enter the password to exit.' },
+      { h: 'The settings window disappeared', p: 'ClawdClock lives in the system tray. Right-click the tray icon to reopen settings, or re-launch the app.' },
+      { h: 'Clock flickers or shows black screen', p: 'Try disabling OLED Mode. On some systems, the window transparency causes flickering. Switching themes can also help.' },
+      { h: 'How do I uninstall?', p: 'Use Windows Settings → Apps → ClawdClock → Uninstall. This removes the app and unregisters the screensaver.' },
+      { h: 'Updates not working', p: 'Make sure "Auto Update" is enabled. You can also click "Check" in the footer. Updates require an internet connection and a signed release.' },
+    ],
+  },
 ];
 
 export function HelpPanel({ onClose }: Props) {

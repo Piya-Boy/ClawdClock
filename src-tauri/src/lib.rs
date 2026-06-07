@@ -561,6 +561,34 @@ async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+// channel: "stable" | "beta"
+#[tauri::command]
+async fn check_for_update_channel(app: tauri::AppHandle, channel: String) -> Result<Option<UpdateInfo>, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let endpoint = match channel.as_str() {
+        "beta" => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest-beta.json",
+        _      => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest.json",
+    };
+    let url = endpoint.parse::<tauri::Url>().map_err(|e| e.to_string())?;
+    let builder = app.updater_builder();
+    let updater = match builder.endpoints(vec![url]) {
+        Ok(b) => match b.build() {
+            Ok(u) => u,
+            Err(_) => return Ok(None),
+        },
+        Err(_) => return Ok(None),
+    };
+    match updater.check().await {
+        Ok(Some(update)) => Ok(Some(UpdateInfo {
+            version: update.version.clone(),
+            body: update.body.clone(),
+            download_url: Some(update.download_url.to_string()),
+        })),
+        Ok(None) => Ok(None),
+        Err(_) => Ok(None),
+    }
+}
+
 /* ── Entry Point ────────────────────────────────────────────── */
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -629,6 +657,7 @@ pub fn run_with_mode(mode: ScrMode) {
             get_system_sleep_timeout,
             set_taskbar_visible,
             check_for_update,
+            check_for_update_channel,
             install_update,
         ])
         .run(tauri::generate_context!())

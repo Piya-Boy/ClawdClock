@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
-import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat, CheckFrequencyOption } from '../types';
+import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat, CheckFrequencyOption, UpdateChannel } from '../types';
 import type { ThemeId } from '../themes';
 
 export const useSettingsStore = create<SettingsState>()(
@@ -19,8 +19,10 @@ export const useSettingsStore = create<SettingsState>()(
       hideTaskbar: false,
       autoUpdate: true,
       checkFrequency: '5 minutes' as CheckFrequencyOption,
+      updateChannel: 'stable' as UpdateChannel,
       githubUsername: '',
       githubRepo: '',
+      openaiApiKey: '',
       setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
@@ -36,8 +38,10 @@ export const useSettingsStore = create<SettingsState>()(
       setHideTaskbar: (v: boolean) => set({ hideTaskbar: v }),
       setAutoUpdate: (v: boolean) => set({ autoUpdate: v }),
       setCheckFrequency: (v: CheckFrequencyOption) => set({ checkFrequency: v }),
+      setUpdateChannel: (v: UpdateChannel) => set({ updateChannel: v }),
       setGithubUsername: (v: string) => set({ githubUsername: v }),
       setGithubRepo: (v: string) => set({ githubRepo: v }),
+      setOpenaiApiKey: (v: string) => set({ openaiApiKey: v }),
     }),
     { name: 'clawdclock-settings' }
   )

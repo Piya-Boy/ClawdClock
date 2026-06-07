@@ -20,6 +20,7 @@ export type SleepAfterOption =
 export type UsageStatus = 'healthy' | 'warning' | 'critical';
 
 export type CheckFrequencyOption = 'On Startup' | '1 minute' | '5 minutes' | '30 minutes' | '1 hour';
+export type UpdateChannel = 'stable' | 'beta';
 
 import type { ThemeId } from '../themes';
 
@@ -36,8 +37,10 @@ export interface SettingsState {
   hideTaskbar: boolean;
   autoUpdate: boolean;
   checkFrequency: CheckFrequencyOption;
+  updateChannel: UpdateChannel;
   githubUsername: string;
   githubRepo: string;
+  openaiApiKey: string;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -50,8 +53,10 @@ export interface SettingsState {
   setHideTaskbar: (v: boolean) => void;
   setAutoUpdate: (v: boolean) => void;
   setCheckFrequency: (v: CheckFrequencyOption) => void;
+  setUpdateChannel: (v: UpdateChannel) => void;
   setGithubUsername: (v: string) => void;
   setGithubRepo: (v: string) => void;
+  setOpenaiApiKey: (v: string) => void;
 }
 
 export interface UsageData {

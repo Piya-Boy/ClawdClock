@@ -16,6 +16,7 @@ import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useChangelog } from './hooks/useChangelog';
 import { useGitHubContributions } from './hooks/useGitHubContributions';
 import { useCIStatus } from './hooks/useCIStatus';
+import { useOpenAIUsage } from './hooks/useOpenAIUsage';
 import { ChangelogPanel } from './components/Settings/ChangelogPanel';
 import { useAchievements } from './hooks/useAchievements';
 import { AchievementToast } from './components/Achievements/AchievementToast';
@@ -56,10 +57,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, githubUsername, githubRepo,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, updateChannel, githubUsername, githubRepo, openaiApiKey,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setGithubUsername, setGithubRepo,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setUpdateChannel, setGithubUsername, setGithubRepo, setOpenaiApiKey,
   } = useSettingsStore();
 
   const {
@@ -74,6 +75,7 @@ export function SettingsApp() {
   const ollama = useOllamaStatus();
   const github = useGitHubContributions(githubUsername || null);
   const ci = useCIStatus(githubRepo || null);
+  const openai = useOpenAIUsage(openaiApiKey || null);
 
   const [showAchievements, setShowAchievements] = useState(false);
   const achievements = useAchievements({
@@ -287,6 +289,27 @@ export function SettingsApp() {
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
           />
           <SettingRow
+            label="OpenAI API Key"
+            desc="Show today's token usage on the clock."
+            control={
+              <input
+                type="password"
+                value={openaiApiKey}
+                onChange={e => setOpenaiApiKey(e.target.value)}
+                placeholder="sk-…"
+                autoComplete="off"
+                style={{
+                  width: 160, padding: '7px 10px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 6, outline: 'none',
+                  color: '#ccc', fontFamily: FF, fontSize: 13,
+                  letterSpacing: '0.06em',
+                }}
+              />
+            }
+          />
+          <SettingRow
             label="GitHub Repo"
             desc="Show CI/CD status (owner/repo)."
             control={
@@ -328,17 +351,30 @@ export function SettingsApp() {
           />
 
           {autoUpdate && (
-            <SettingRow
-              label="Check Frequency"
-              desc="How often to check for updates."
-              control={
-                <Dropdown
-                  value={checkFrequency}
-                  options={['On Startup', '1 minute', '5 minutes', '30 minutes', '1 hour']}
-                  onChange={v => setCheckFrequency(v as any)}
-                />
-              }
-            />
+            <>
+              <SettingRow
+                label="Update Channel"
+                desc="Stable for releases, Beta for pre-releases."
+                control={
+                  <SegControl
+                    value={updateChannel}
+                    options={[{ val: 'stable', label: 'Stable' }, { val: 'beta', label: 'Beta' }]}
+                    onChange={v => setUpdateChannel(v as any)}
+                  />
+                }
+              />
+              <SettingRow
+                label="Check Frequency"
+                desc="How often to check for updates."
+                control={
+                  <Dropdown
+                    value={checkFrequency}
+                    options={['On Startup', '1 minute', '5 minutes', '30 minutes', '1 hour']}
+                    onChange={v => setCheckFrequency(v as any)}
+                  />
+                }
+              />
+            </>
           )}
 
           {/* Preview Now */}
@@ -401,6 +437,7 @@ export function SettingsApp() {
               githubUsername={githubUsername}
               githubDays={github.days}
               ciStatus={ci}
+              openaiUsage={openai}
             />
           </div>
         </div>
