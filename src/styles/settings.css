@@ -1,0 +1,15 @@
+.wbtn-min:hover, .wbtn-max:hover { background: rgba(255,255,255,0.09) !important; }
+.wbtn-close:hover { background: #c42b1c !important; }
+.wbtn-close:hover .close-line { stroke: #fff !important; }
+
+.drop-item:hover { background: rgba(255,255,255,0.055) !important; }
+.drop-item.active { background: rgba(255,107,61,0.08) !important; color: #FF6B3D !important; }
+
+.cancel-btn:hover { border-color: #383838 !important; color: #bbb !important; }
+.save-btn:hover   { background: #e8622f !important; }
+.preview-btn:hover { opacity: 0.7 !important; }
+.seg-btn:hover:not(.seg-active) { color: #888 !important; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }

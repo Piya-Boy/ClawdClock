@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClawdClock — Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    #root { width: 100%; height: 100%; }
+
+    .wbtn-min:hover, .wbtn-max:hover { background: rgba(255,255,255,0.09) !important; }
+    .wbtn-close:hover { background: #c42b1c !important; }
+    .wbtn-close:hover .close-line { stroke: #fff !important; }
+
+    .drop-item:hover { background: rgba(255,255,255,0.055) !important; }
+    .drop-item.active { background: rgba(255,107,61,0.08) !important; color: #FF6B3D !important; }
+
+    .cancel-btn:hover { border-color: #383838 !important; color: #bbb !important; }
+    .save-btn:hover   { background: #e8622f !important; }
+    .preview-btn:hover { border-color: #333 !important; background: rgba(255,255,255,0.025) !important; }
+    .seg-btn:hover:not(.seg-active) { color: #888 !important; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+  const { useState, useEffect, useRef } = React;
+
+  /* ── Constants ─────────────────────────────────────────────── */
+  const FF      = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
+  const WIN_W   = 900;
+  const WIN_H   = 580;
+  const TITLE_H = 40;
+  const FOOT_H  = 56;
+  const LEFT_W  = 352;
+  const C_ACC   = '#FF6B3D';
+  const C_GREEN = '#66CC44';
+  const C_BLUE  = '#2D7DFF';
+
+  /* mini flip-card metrics */
+  const MC_W = 54, MC_H = 66, MC_HH = 33, MC_FS = 58;
+
+  /* ── Mini Flip Card ──────────────────────────────────────────── */
+  function MiniCard({ digit }) {
+    const baseNum = {
+      position: 'absolute', left: 0, width: MC_W, height: MC_H,
+      fontSize: MC_FS, lineHeight: `${MC_H}px`,
+      fontFamily: FF, fontWeight: 900, textAlign: 'center', letterSpacing: '-0.01em',
+    };
+    return (
+      <div style={{ position: 'relative', width: MC_W, height: MC_H, flexShrink: 0 }}>
+        <div style={{ position:'absolute', top:0, left:0, width:MC_W, height:MC_HH,
+          overflow:'hidden', background:'#131313', borderRadius:'5px 5px 0 0' }}>
+          <div style={{ ...baseNum, top: 0, color: '#fff' }}>{digit}</div>
+        </div>
+        <div style={{ position:'absolute', bottom:0, left:0, width:MC_W, height:MC_HH,
+          overflow:'hidden', background:'#0b0b0b', borderRadius:'0 0 5px 5px' }}>
+          <div style={{ ...baseNum, top: -MC_HH, color: '#999' }}>{digit}</div>
+        </div>
+        <div style={{ position:'absolute', top:MC_HH-1, left:0, width:'100%', height:2, background:'#000', zIndex:5 }} />
+        {[[-3, MC_HH-4], [MC_W-2, MC_HH-4]].map(([l,t], i) => (
+          <div key={i} style={{ position:'absolute', top:t, left:l, width:5, height:8, borderRadius:1, background:'#000', zIndex:6 }} />
+        ))}
+      </div>
+    );
+  }
+
+  function MiniClock({ hours, minutes, is12, ampm }) {
+    const h = String(hours).padStart(2, '0');
+    const m = String(minutes).padStart(2, '0');
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:7, alignItems:'center' }}>
+        <div style={{ display:'flex', gap:5 }}>
+          <MiniCard digit={h[0]} /><MiniCard digit={h[1]} />
+        </div>
+        <div style={{ display:'flex', gap:5 }}>
+          <MiniCard digit={m[0]} /><MiniCard digit={m[1]} />
+        </div>
+        {is12 && (
+          <div style={{ fontSize:9, fontWeight:700, color:'#4a4a4a', fontFamily:FF, letterSpacing:'0.14em', marginTop:1 }}>
+            {ampm}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Mini Metric ─────────────────────────────────────────────── */
+  function MiniMetric({ label, pct, color }) {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+        <div style={{ fontSize:9, fontWeight:700, letterSpacing:'0.17em', color:'#333', fontFamily:FF }}>
+          {label}
+        </div>
+        <div style={{ display:'flex', alignItems:'baseline', gap:1, lineHeight:1 }}>
+          <span style={{ fontSize:32, fontWeight:900, color, fontFamily:FF, letterSpacing:'-0.03em' }}>{pct}</span>
+          <span style={{ fontSize:15, fontWeight:700, color, fontFamily:FF, opacity:0.6 }}>%</span>
+        </div>
+        <div style={{ height:3, background:'#181818', borderRadius:2, overflow:'hidden' }}>
+          <div style={{ width:`${pct}%`, height:'100%', background:color, borderRadius:2 }} />
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Dropdown ────────────────────────────────────────────────── */
+  function Dropdown({ value, options, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+      const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      document.addEventListener('mousedown', h);
+      return () => document.removeEventListener('mousedown', h);
+    }, []);
+
+    return (
+      <div ref={ref} style={{ position:'relative', width:172 }}>
+        {/* Trigger */}
+        <div
+          onClick={() => setOpen(v => !v)}
+          style={{
+            width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between',
+            padding:'7px 11px', gap:8,
+            background: open ? '#1d1d1d' : '#151515',
+            border:`1px solid ${open ? '#303030' : '#222'}`,
+            borderRadius:6, cursor:'pointer',
+            fontSize:12, fontWeight:500, color:'#ccc',
+            fontFamily:FF, userSelect:'none',
+            transition:'all 0.1s ease',
+          }}
+        >
+          <span style={{ whiteSpace:'nowrap', flex:1, minWidth:0 }}>{value}</span>
+          <svg width="8" height="5" viewBox="0 0 8 5" fill="none" style={{ flexShrink:0, transition:'transform 0.15s ease', transform: open ? 'rotate(180deg)' : 'none' }}>
+            <path d="M0.5 0.5L4 4L7.5 0.5" stroke="#4a4a4a" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+
+        {/* List */}
+        {open && (
+          <div style={{
+            position:'absolute', top:'calc(100% + 5px)', left:0, right:0, zIndex:300,
+            background:'#181818', border:'1px solid #282828',
+            borderRadius:8, overflow:'hidden',
+            boxShadow:'0 16px 40px rgba(0,0,0,0.95)',
+          }}>
+            {options.map(opt => (
+              <div
+                key={opt}
+                className={`drop-item ${opt === value ? 'active' : ''}`}
+                onClick={() => { onChange(opt); setOpen(false); }}
+                style={{
+                  padding:'9px 12px',
+                  fontSize:12, fontWeight:500,
+                  color: opt === value ? C_ACC : '#c0c0c0',
+                  fontFamily:FF, cursor:'pointer',
+                  display:'flex', alignItems:'center', justifyContent:'space-between',
+                  transition:'background 0.08s',
+                }}
+              >
+                <span>{opt}</span>
+                {opt === value && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                    <path d="M1 4L3.8 6.8L9 1" stroke={C_ACC} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── Segmented Control ───────────────────────────────────────── */
+  function SegControl({ value, options, onChange }) {
+    return (
+      <div style={{
+        display:'flex', background:'#0f0f0f',
+        border:'1px solid #1f1f1f', borderRadius:7, padding:2, gap:1,
+      }}>
+        {options.map(o => (
+          <button
+            key={o.val}
+            className={`seg-btn ${value === o.val ? 'seg-active' : ''}`}
+            onClick={() => onChange(o.val)}
+            style={{
+              padding:'5px 18px',
+              fontSize:11, fontWeight:700, fontFamily:FF,
+              border:'none', borderRadius:5, cursor:'pointer',
+              background: value === o.val ? '#e2e2e2' : 'transparent',
+              color: value === o.val ? '#090909' : '#484848',
+              transition:'all 0.12s ease', whiteSpace:'nowrap',
+            }}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  /* ── Setting Row ─────────────────────────────────────────────── */
+  function SettingRow({ label, desc, control }) {
+    return (
+      <div style={{ padding:'17px 0', borderBottom:'1px solid #161616' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 172px', alignItems:'center', gap:16 }}>
+          <div style={{ minWidth:0 }}>
+            <div style={{ fontSize:13, fontWeight:600, color:'#d4d4d4', fontFamily:FF, lineHeight:1 }}>{label}</div>
+            {desc && (
+              <div style={{ fontSize:11, color:'#383838', fontFamily:FF, marginTop:4, lineHeight:1.55 }}>{desc}</div>
+            )}
+          </div>
+          <div>{control}</div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Window Chrome ───────────────────────────────────────────── */
+  function TitleBar() {
+    return (
+      <div style={{
+        height:TITLE_H, minHeight:TITLE_H,
+        background:'#0e0e0e',
+        borderBottom:'1px solid #1c1c1c',
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        paddingLeft:14, userSelect:'none',
+      }}>
+        <div style={{ display:'flex', alignItems:'center', gap:9 }}>
+          <img src="mascot.gif" width={19} height={19} style={{ imageRendering:'pixelated', display:'block' }} />
+          <span style={{ fontSize:12, fontWeight:600, color:'#646464', fontFamily:FF, letterSpacing:'0.01em', whiteSpace:'nowrap' }}>
+            ClawdClock Settings
+          </span>
+        </div>
+        {/* Windows 11 controls */}
+        <div style={{ display:'flex', height:TITLE_H }}>
+          {[
+            { cls:'wbtn-min', content: <rect x="6" y="9.5" width="6" height="1.4" fill="#aaa" rx="0.4"/> },
+            { cls:'wbtn-max', content: <rect x="5.5" y="5.5" width="7" height="7" stroke="#aaa" strokeWidth="1.1" fill="none"/> },
+            { cls:'wbtn-close', content: (
+              <>
+                <line className="close-line" x1="5.5" y1="5.5" x2="12.5" y2="12.5" stroke="#aaa" strokeWidth="1.2" strokeLinecap="round"/>
+                <line className="close-line" x1="12.5" y1="5.5" x2="5.5" y2="12.5" stroke="#aaa" strokeWidth="1.2" strokeLinecap="round"/>
+              </>
+            )},
+          ].map((btn, i) => (
+            <div key={i} className={btn.cls} style={{
+              width:46, height:'100%',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              cursor:'default', transition:'background 0.1s ease',
+            }}>
+              <svg width="18" height="18" viewBox="0 0 18 18">{btn.content}</svg>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── App ─────────────────────────────────────────────────────── */
+  function App() {
+    const [activateAfter, setActivateAfter] = useState('5 minutes');
+    const [computerSleep, setComputerSleep] = useState('Never');
+    const [timeFormat,    setTimeFormat]    = useState('24');
+    const [now,           setNow]           = useState(() => new Date());
+    const [scale,         setScale]         = useState(
+      () => Math.min(1, window.innerWidth / (WIN_W + 64), window.innerHeight / (WIN_H + 64))
+    );
+
+    useEffect(() => {
+      const id = setInterval(() => setNow(new Date()), 1000);
+      return () => clearInterval(id);
+    }, []);
+
+    useEffect(() => {
+      const fn = () => setScale(Math.min(1, window.innerWidth/(WIN_W+64), window.innerHeight/(WIN_H+64)));
+      window.addEventListener('resize', fn);
+      return () => window.removeEventListener('resize', fn);
+    }, []);
+
+    const is12      = timeFormat === '12';
+    const rawH      = now.getHours();
+    const displayH  = is12 ? (rawH % 12 || 12) : rawH;
+    const ampm      = rawH >= 12 ? 'PM' : 'AM';
+    const mins      = now.getMinutes();
+
+    return (
+      <div style={{
+        position:'fixed', inset:0, background:'#000',
+        display:'flex', alignItems:'center', justifyContent:'center',
+      }}>
+        {/* Subtle desktop grid texture */}
+        <div style={{
+          position:'absolute', inset:0, opacity:0.03,
+          backgroundImage:'radial-gradient(circle, #fff 1px, transparent 1px)',
+          backgroundSize:'32px 32px',
+          pointerEvents:'none',
+        }} />
+
+        {/* Window */}
+        <div style={{
+          width: WIN_W, height: WIN_H,
+          transform: `scale(${scale})`, transformOrigin:'center center',
+          flexShrink: 0,
+          borderRadius: 10,
+          border: '1px solid #252525',
+          boxShadow: '0 0 0 0.5px rgba(255,255,255,0.04), 0 32px 100px rgba(0,0,0,0.98)',
+          overflow: 'hidden',
+          display: 'flex', flexDirection: 'column',
+          background: '#0d0d0d',
+        }}>
+
+          <TitleBar />
+
+          {/* Body */}
+          <div style={{ flex:1, display:'flex', overflow:'hidden', minHeight:0 }}>
+
+            {/* ── LEFT: Settings Panel ── */}
+            <div style={{
+              width: LEFT_W, minWidth: LEFT_W,
+              background: '#0d0d0d',
+              borderRight: '1px solid #191919',
+              display: 'flex', flexDirection:'column',
+              overflowY: 'auto',
+              padding: '24px 26px 20px',
+            }}>
+              {/* App header */}
+              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
+                <img src="mascot.gif" width={46} height={46}
+                     style={{ imageRendering:'pixelated', display:'block', borderRadius:6 }} />
+                <div>
+                  <div style={{ fontSize:16, fontWeight:800, color:'#ebebeb', fontFamily:FF, lineHeight:1 }}>ClawdClock</div>
+                  <div style={{ fontSize:11, color:'#404040', fontFamily:FF, marginTop:5, fontWeight:500, letterSpacing:'0.01em' }}>
+                    Screen Saver & Idle Display
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ height:1, background:'#181818', marginBottom:4 }} />
+
+              {/* Setting rows */}
+              <SettingRow
+                label="Activate After"
+                desc="Show ClawdClock when the computer has been idle."
+                control={
+                  <Dropdown
+                    value={activateAfter}
+                    options={['1 minute','5 minutes','10 minutes','15 minutes','30 minutes']}
+                    onChange={setActivateAfter}
+                  />
+                }
+              />
+              <SettingRow
+                label="Computer Sleep"
+                desc="Automatically sleep the computer while ClawdClock is active."
+                control={
+                  <Dropdown
+                    value={computerSleep}
+                    options={['Never','15 minutes','30 minutes','1 hour','2 hours']}
+                    onChange={setComputerSleep}
+                  />
+                }
+              />
+              <SettingRow
+                label="Time Format"
+                control={
+                  <SegControl
+                    value={timeFormat}
+                    options={[{val:'24',label:'24 Hour'},{val:'12',label:'12 Hour'}]}
+                    onChange={setTimeFormat}
+                  />
+                }
+              />
+
+              {/* Preview button */}
+              <div style={{ padding:'16px 0 0' }}>
+                <button
+                  className="preview-btn"
+                  style={{
+                    width:'100%', padding:'11px 14px',
+                    background:'transparent',
+                    border:'1px solid #222', borderRadius:8, cursor:'pointer',
+                    display:'flex', alignItems:'center', gap:12,
+                    transition:'all 0.15s ease', textAlign:'left',
+                  }}
+                >
+                  <div style={{
+                    width:30, height:30, borderRadius:'50%',
+                    background:'#1a1a1a', border:'1px solid #262626',
+                    display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+                  }}>
+                    <svg width="9" height="11" viewBox="0 0 9 11" fill="none">
+                      <path d="M1 1L8 5.5L1 10V1Z" fill={C_ACC}/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:'#d4d4d4', fontFamily:FF, lineHeight:1 }}>Preview Now</div>
+                    <div style={{ fontSize:11, color:'#363636', fontFamily:FF, marginTop:3, lineHeight:1.4 }}>
+                      Launch full-screen preview on the selected monitor.
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* ── RIGHT: Live Preview ── */}
+            <div style={{
+              flex:1,
+              background:'#000',
+              display:'flex', flexDirection:'column',
+              alignItems:'center', justifyContent:'center',
+              position:'relative', overflow:'hidden',
+            }}>
+              {/* Label */}
+              <div style={{
+                position:'absolute', top:13,
+                left:0, right:0, textAlign:'center',
+                fontSize:9, fontWeight:700, color:'#282828',
+                fontFamily:FF, letterSpacing:'0.22em',
+              }}>
+                LIVE PREVIEW
+              </div>
+
+              {/* Mini dashboard */}
+              <div style={{
+                display:'flex',
+                width:'82%',
+                alignItems:'center',
+              }}>
+                {/* Mini clock — left 38% */}
+                <div style={{
+                  width:'38%',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}>
+                  <MiniClock hours={displayH} minutes={mins} is12={is12} ampm={ampm} />
+                </div>
+
+                {/* Mini metrics — right 62% */}
+                <div style={{
+                  flex:1,
+                  display:'flex', flexDirection:'column',
+                  gap:0,
+                  paddingLeft:18,
+                }}>
+                  <div style={{
+                    fontSize:10, fontWeight:900,
+                    color: C_ACC, fontFamily:FF,
+                    letterSpacing:'0.05em', marginBottom:16,
+                    whiteSpace:'nowrap',
+                  }}>
+                    CLAUDE CODE
+                  </div>
+
+                  <MiniMetric label="SESSION (5H)" pct={37} color={C_GREEN} />
+                  <div style={{ height:1, background:'#141414', margin:'12px 0' }} />
+                  <MiniMetric label="WEEKLY (7D)" pct={12} color={C_BLUE} />
+                </div>
+              </div>
+
+              {/* Mascot bottom-right */}
+              <div style={{ position:'absolute', bottom:12, right:14 }}>
+                <img src="mascot.gif" width={38} height={38}
+                     style={{ imageRendering:'pixelated', display:'block', opacity:0.75 }} />
+              </div>
+            </div>
+          </div>
+
+          {/* ── Footer ── */}
+          <div style={{
+            height: FOOT_H, minHeight: FOOT_H,
+            background: '#0a0a0a',
+            borderTop: '1px solid #181818',
+            display:'flex', alignItems:'center', justifyContent:'flex-end',
+            padding:'0 20px', gap:8,
+          }}>
+            <button
+              className="cancel-btn"
+              style={{
+                padding:'8px 22px',
+                background:'transparent',
+                border:'1px solid #222', borderRadius:6,
+                color:'#585858', fontFamily:FF, fontSize:12, fontWeight:600,
+                cursor:'pointer', letterSpacing:'0.02em',
+                transition:'all 0.12s ease',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              className="save-btn"
+              style={{
+                padding:'8px 26px',
+                background: C_ACC,
+                border:'none', borderRadius:6,
+                color:'#fff', fontFamily:FF, fontSize:12, fontWeight:700,
+                cursor:'pointer', letterSpacing:'0.02em',
+                transition:'background 0.12s ease',
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
