@@ -714,6 +714,14 @@ pub fn run_with_mode(mode: ScrMode) {
                     .build(app)?;
             }
 
+            // Show settings window on startup (Config mode)
+            if mode == ScrMode::Config {
+                if let Some(w) = app.get_webview_window("settings") {
+                    let _ = w.show();
+                    let _ = w.set_focus();
+                }
+            }
+
             // Global hotkey only when not in screensaver/preview mode
             if mode == ScrMode::Config {
                 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};

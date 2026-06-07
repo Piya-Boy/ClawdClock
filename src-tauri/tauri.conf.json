@@ -32,7 +32,7 @@
         "resizable": false,
         "center": true,
         "decorations": false,
-        "visible": true,
+        "visible": false,
         "backgroundColor": "#000000"
       }
     ],
