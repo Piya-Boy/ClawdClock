@@ -34,7 +34,6 @@ export interface SettingsState {
   launchAtStartup: boolean;
   selectedMonitor: number;
   lockScreenEnabled: boolean;
-  hideTaskbar: boolean;
   autoUpdate: boolean;
   checkFrequency: CheckFrequencyOption;
   updateChannel: UpdateChannel;
@@ -48,7 +47,6 @@ export interface SettingsState {
   setLaunchAtStartup: (v: boolean) => void;
   setSelectedMonitor: (v: number) => void;
   setLockScreenEnabled: (v: boolean) => void;
-  setHideTaskbar: (v: boolean) => void;
   setAutoUpdate: (v: boolean) => void;
   setCheckFrequency: (v: CheckFrequencyOption) => void;
   setUpdateChannel: (v: UpdateChannel) => void;
