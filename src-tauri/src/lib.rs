@@ -298,6 +298,35 @@ fn get_system_sleep_timeout() -> u32 {
     0
 }
 
+/* ── Taskbar ────────────────────────────────────────────────── */
+
+#[tauri::command]
+fn set_taskbar_visible(visible: bool) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    unsafe {
+        use windows_sys::Win32::UI::Shell::{SHAppBarMessage, ABM_GETSTATE, ABM_SETSTATE, APPBARDATA, ABS_AUTOHIDE, ABS_ALWAYSONTOP};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{FindWindowW, ShowWindow, SW_HIDE, SW_SHOW};
+        use std::ffi::OsStr;
+        use std::os::windows::ffi::OsStrExt;
+
+        let class: Vec<u16> = OsStr::new("Shell_TrayWnd").encode_wide().chain(std::iter::once(0)).collect();
+        let hwnd = FindWindowW(class.as_ptr(), std::ptr::null());
+        if hwnd.is_null() {
+            return Err("taskbar window not found".into());
+        }
+        ShowWindow(hwnd, if visible { SW_SHOW } else { SW_HIDE });
+
+        let mut abd: APPBARDATA = std::mem::zeroed();
+        abd.cbSize = std::mem::size_of::<APPBARDATA>() as u32;
+        abd.hWnd = hwnd;
+        let state: u32 = if visible { ABS_ALWAYSONTOP } else { ABS_AUTOHIDE };
+        abd.lParam = state as isize;
+        SHAppBarMessage(ABM_SETSTATE, &mut abd);
+        let _ = ABM_GETSTATE;
+    }
+    Ok(())
+}
+
 /* ── Autostart ──────────────────────────────────────────────── */
 
 #[tauri::command]
@@ -596,6 +625,7 @@ pub fn run_with_mode(mode: ScrMode) {
             register_screensaver,
             get_system_screensaver_timeout,
             get_system_sleep_timeout,
+            set_taskbar_visible,
             check_for_update,
             install_update,
         ])

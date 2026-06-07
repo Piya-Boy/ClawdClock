@@ -43,10 +43,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, autoUpdate,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setAutoUpdate,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate,
   } = useSettingsStore();
 
   const {
@@ -241,6 +241,11 @@ export function SettingsApp() {
           )}
 
           <SettingRow
+            label="Hide Taskbar"
+            desc="Hide the Windows taskbar while ClawdClock is active."
+            control={<Toggle value={hideTaskbar} onChange={setHideTaskbar} />}
+          />
+          <SettingRow
             label="Auto Update"
             desc="Check for updates automatically on startup."
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
@@ -330,9 +335,20 @@ export function SettingsApp() {
           )}
           {updater.available && !updater.installing && (
             <>
-              <span style={{ fontSize: 11, color: C_ACC, fontFamily: FF, fontWeight: 600 }}>
-                v{updater.version} available
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <span style={{ fontSize: 11, color: C_ACC, fontFamily: FF, fontWeight: 600 }}>
+                  v{updater.version} available
+                </span>
+                {updater.body && (
+                  <span style={{
+                    fontSize: 10, color: '#555', fontFamily: FF,
+                    maxWidth: 200, textAlign: 'right', lineHeight: 1.4,
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  }}>
+                    {updater.body}
+                  </span>
+                )}
+              </div>
               <button
                 onClick={updater.install}
                 style={{

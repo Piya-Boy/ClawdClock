@@ -19,7 +19,7 @@ function parseActivateAfterSeconds(value: string): number {
 }
 
 export function useIdleDetection() {
-  const { activateAfter, selectedMonitor } = useSettingsStore();
+  const { activateAfter, selectedMonitor, hideTaskbar } = useSettingsStore();
   const clockVisible = useRef(false);
 
   useEffect(() => {
@@ -31,6 +31,7 @@ export function useIdleDetection() {
         const shouldShow = idle >= thresholdSeconds;
 
         if (shouldShow && !clockVisible.current) {
+          if (hideTaskbar) invoke('set_taskbar_visible', { visible: false }).catch(() => {});
           if (selectedMonitor === -1) {
             await invoke('show_clock_on_all_monitors');
           } else {
@@ -43,6 +44,7 @@ export function useIdleDetection() {
           } else {
             await invoke('hide_clock_window');
           }
+          if (hideTaskbar) invoke('set_taskbar_visible', { visible: true }).catch(() => {});
           clockVisible.current = false;
         }
       } catch {
@@ -53,5 +55,5 @@ export function useIdleDetection() {
     poll();
     const id = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [activateAfter, selectedMonitor]);
+  }, [activateAfter, selectedMonitor, hideTaskbar]);
 }

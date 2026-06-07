@@ -387,7 +387,7 @@ Target: Developer Ambient Lock Screen
 
 * [x] Fullscreen lock mode
 * [x] Borderless lock mode
-* [ ] Hide taskbar (future)
+* [x] Hide taskbar
 * [x] Focused window mode
 * [x] Lock indicator UI
 
@@ -505,7 +505,7 @@ Target: Professional Setup
 ## Fun Features
 
 * [ ] Animated Mascot
-* [ ] DVD Bouncing Mascot
+* [x] DVD Bouncing Mascot
 * [ ] Mascot Reactions
 * [ ] Seasonal Themes
 * [ ] Achievement System
@@ -540,7 +540,7 @@ Target: Seamless Updates
 
 ### Release Notes
 
-* [ ] Show changelog before update
+* [x] Show changelog before update
 * [ ] Show release version
 * [ ] Show update size
 
@@ -558,7 +558,7 @@ Target: Seamless Updates
 
 ### Settings
 
-* [ ] Enable Auto Update
+* [x] Enable Auto Update
 * [ ] Check Frequency
 * [ ] Update Channel Selection
 * [ ] Download Updates Automatically

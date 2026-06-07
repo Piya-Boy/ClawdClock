@@ -16,6 +16,7 @@ export const useSettingsStore = create<SettingsState>()(
       launchAtStartup: false,
       selectedMonitor: 0,
       lockScreenEnabled: false,
+      hideTaskbar: false,
       autoUpdate: true,
       setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
@@ -29,6 +30,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       setSelectedMonitor: (v: number) => set({ selectedMonitor: v }),
       setLockScreenEnabled: (v: boolean) => set({ lockScreenEnabled: v }),
+      setHideTaskbar: (v: boolean) => set({ hideTaskbar: v }),
       setAutoUpdate: (v: boolean) => set({ autoUpdate: v }),
     }),
     { name: 'clawdclock-settings' }
