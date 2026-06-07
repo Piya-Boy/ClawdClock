@@ -14,6 +14,7 @@ import { getTheme } from './themes';
 import { useOledShift } from './hooks/useOledShift';
 import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useGitHubContributions } from './hooks/useGitHubContributions';
+import { useCIStatus } from './hooks/useCIStatus';
 import { invoke } from '@tauri-apps/api/core';
 import './styles/globals.css';
 
@@ -26,11 +27,12 @@ export function App() {
 
   useClaudeUsage();
 
-  const { lockScreenEnabled, lockPassword, theme: themeId, oledMode, timeFormat, githubUsername } = useSettingsStore();
+  const { lockScreenEnabled, lockPassword, theme: themeId, oledMode, timeFormat, githubUsername, githubRepo } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
   const escapeBar = useEscapeBar();
   const ollama = useOllamaStatus();
   const github = useGitHubContributions(githubUsername || null);
+  const ci = useCIStatus(githubRepo || null);
   const theme = getTheme(themeId);
 
   const needsPassword = lockScreenEnabled && lockPassword.length > 0;
@@ -107,6 +109,7 @@ export function App() {
           ollamaRunning={ollama.running}
           githubUsername={githubUsername}
           githubDays={github.days}
+          ciStatus={ci}
         />
       </div>
     </div>

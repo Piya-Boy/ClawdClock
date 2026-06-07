@@ -20,6 +20,7 @@ export const useSettingsStore = create<SettingsState>()(
       autoUpdate: true,
       checkFrequency: '5 minutes' as CheckFrequencyOption,
       githubUsername: '',
+      githubRepo: '',
       setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
@@ -36,6 +37,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAutoUpdate: (v: boolean) => set({ autoUpdate: v }),
       setCheckFrequency: (v: CheckFrequencyOption) => set({ checkFrequency: v }),
       setGithubUsername: (v: string) => set({ githubUsername: v }),
+      setGithubRepo: (v: string) => set({ githubRepo: v }),
     }),
     { name: 'clawdclock-settings' }
   )

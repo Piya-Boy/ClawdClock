@@ -37,6 +37,7 @@ export interface SettingsState {
   autoUpdate: boolean;
   checkFrequency: CheckFrequencyOption;
   githubUsername: string;
+  githubRepo: string;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -50,6 +51,7 @@ export interface SettingsState {
   setAutoUpdate: (v: boolean) => void;
   setCheckFrequency: (v: CheckFrequencyOption) => void;
   setGithubUsername: (v: string) => void;
+  setGithubRepo: (v: string) => void;
 }
 
 export interface UsageData {

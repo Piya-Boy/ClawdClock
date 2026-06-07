@@ -2,10 +2,12 @@ import { FlipClock } from '../FlipClock/FlipClock';
 import { UsageSection } from '../UsagePanel/UsageSection';
 import { OllamaSection } from '../OllamaPanel/OllamaSection';
 import { ContributionGrid } from '../GitHubPanel/ContributionGrid';
+import { CIStatusBadge } from '../GitHubPanel/CIStatusBadge';
 import { formatTimeAgo } from '../../utils/countdown';
 import type { Theme } from '../../themes';
 import type { OllamaModel } from '../../hooks/useOllamaStatus';
 import type { ContributionDay } from '../../hooks/useGitHubContributions';
+import type { CIStatus } from '../../hooks/useCIStatus';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -26,6 +28,7 @@ interface Props {
   ollamaRunning?: OllamaModel[];
   githubUsername?: string;
   githubDays?: ContributionDay[];
+  ciStatus?: CIStatus;
 }
 
 export function ClawdClockView({
@@ -38,6 +41,7 @@ export function ClawdClockView({
   ollamaRunning = [],
   githubUsername = '',
   githubDays = [],
+  ciStatus,
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
@@ -99,6 +103,12 @@ export function ClawdClockView({
           <>
             <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
             <ContributionGrid days={githubDays} username={githubUsername} theme={theme} />
+          </>
+        )}
+        {ciStatus && ciStatus.status !== 'unknown' && (
+          <>
+            <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
+            <CIStatusBadge ci={ciStatus} theme={theme} />
           </>
         )}
       </div>

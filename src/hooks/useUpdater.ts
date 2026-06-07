@@ -8,6 +8,8 @@ export interface UpdateState {
   available: boolean;
   version: string | null;
   body: string | null;
+  downloadUrl: string | null;
+  downloadSize: number | null;
   installing: boolean;
   error: string | null;
   lastChecked: Date | null;
@@ -24,12 +26,30 @@ function freqToMs(freq: CheckFrequencyOption): number | null {
   return map[freq];
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+async function fetchDownloadSize(url: string): Promise<number | null> {
+  try {
+    const res = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(5000) });
+    const cl = res.headers.get('content-length');
+    return cl ? parseInt(cl, 10) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function useUpdater() {
   const [state, setState] = useState<UpdateState>({
     checking: false,
     available: false,
     version: null,
     body: null,
+    downloadUrl: null,
+    downloadSize: null,
     installing: false,
     error: null,
     lastChecked: null,
@@ -42,13 +62,19 @@ export function useUpdater() {
     if (import.meta.env.DEV) return;
     setState(s => ({ ...s, checking: true, error: null }));
     try {
-      const result = await invoke<{ version: string; body: string | null } | null>('check_for_update');
+      const result = await invoke<{ version: string; body: string | null; download_url: string | null } | null>('check_for_update');
+      let downloadSize: number | null = null;
+      if (result?.download_url) {
+        downloadSize = await fetchDownloadSize(result.download_url);
+      }
       setState(s => ({
         ...s,
         checking: false,
         available: result != null,
         version: result?.version ?? null,
         body: result?.body ?? null,
+        downloadUrl: result?.download_url ?? null,
+        downloadSize,
         lastChecked: new Date(),
       }));
     } catch (e) {
@@ -81,5 +107,5 @@ export function useUpdater() {
     };
   }, [autoUpdate, checkFrequency]);
 
-  return { ...state, check, install };
+  return { ...state, formatSize: (n: number) => formatBytes(n), check, install };
 }

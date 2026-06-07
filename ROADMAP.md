@@ -497,7 +497,7 @@ Target: Professional Setup
 
 * [x] GitHub Activity
 * [x] GitHub Contributions
-* [ ] CI/CD Status
+* [x] CI/CD Status
 * [x] Ollama Usage
 
 
@@ -507,7 +507,7 @@ Target: Professional Setup
 * [x] DVD Bouncing Mascot
 * [x] Mascot Reactions
 * [ ] Seasonal Themes
-* [ ] Achievement System
+* [x] Achievement System
 
 ---
 
@@ -541,7 +541,7 @@ Target: Seamless Updates
 
 * [x] Show changelog before update
 * [x] Show release version
-* [ ] Show update size
+* [x] Show update size
 
 ### Failure Handling
 

@@ -528,6 +528,7 @@ fn register_screensaver() -> Result<(), String> {
 pub struct UpdateInfo {
     pub version: String,
     pub body: Option<String>,
+    pub download_url: Option<String>,
 }
 
 #[tauri::command]
@@ -541,6 +542,7 @@ async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, S
         Ok(Some(update)) => Ok(Some(UpdateInfo {
             version: update.version.clone(),
             body: update.body.clone(),
+            download_url: Some(update.download_url.to_string()),
         })),
         Ok(None) => Ok(None),
         Err(_) => Ok(None), // network error, endpoint unreachable — silent fail

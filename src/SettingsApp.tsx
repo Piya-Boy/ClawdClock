@@ -15,7 +15,11 @@ import { useSystemDefaults } from './hooks/useSystemDefaults';
 import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useChangelog } from './hooks/useChangelog';
 import { useGitHubContributions } from './hooks/useGitHubContributions';
+import { useCIStatus } from './hooks/useCIStatus';
 import { ChangelogPanel } from './components/Settings/ChangelogPanel';
+import { useAchievements } from './hooks/useAchievements';
+import { AchievementToast } from './components/Achievements/AchievementToast';
+import { AchievementsPanel } from './components/Achievements/AchievementsPanel';
 import { useUsageStore } from './stores/usageStore';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
@@ -50,10 +54,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, githubUsername,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, githubUsername, githubRepo,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setGithubUsername,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setGithubUsername, setGithubRepo,
   } = useSettingsStore();
 
   const {
@@ -67,14 +71,30 @@ export function SettingsApp() {
   const updater = useUpdater();
   const ollama = useOllamaStatus();
   const github = useGitHubContributions(githubUsername || null);
+  const ci = useCIStatus(githubRepo || null);
+
+  const [showAchievements, setShowAchievements] = useState(false);
+  const achievements = useAchievements({
+    sessionPct,
+    weeklyPct,
+    lockScreenEnabled,
+    oledMode,
+    githubUsername,
+    ollamaActive: ollama.available && ollama.running.length > 0,
+    themeChanged: themeId !== 'classic',
+  });
 
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
   const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.healthy;
 
   return (
     <>
+    <AchievementToast achievement={achievements.newlyUnlocked} />
     {showChangelog && changelog.releases.length > 0 && (
       <ChangelogPanel releases={changelog.releases} onClose={() => setShowChangelog(false)} />
+    )}
+    {showAchievements && (
+      <AchievementsPanel achievements={achievements.all} onClose={() => setShowAchievements(false)} />
     )}
     <div style={{
       position: 'fixed', inset: 0,
@@ -264,6 +284,26 @@ export function SettingsApp() {
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
           />
           <SettingRow
+            label="GitHub Repo"
+            desc="Show CI/CD status (owner/repo)."
+            control={
+              <input
+                type="text"
+                value={githubRepo}
+                onChange={e => setGithubRepo(e.target.value)}
+                placeholder="owner/repo"
+                autoComplete="off"
+                style={{
+                  width: 160, padding: '7px 10px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 6, outline: 'none',
+                  color: '#ccc', fontFamily: FF, fontSize: 13,
+                }}
+              />
+            }
+          />
+          <SettingRow
             label="GitHub Username"
             desc="Show contribution heatmap on the clock display."
             control={
@@ -357,6 +397,7 @@ export function SettingsApp() {
               ollamaRunning={ollama.running}
               githubUsername={githubUsername}
               githubDays={github.days}
+              ciStatus={ci}
             />
           </div>
         </div>
@@ -387,6 +428,17 @@ export function SettingsApp() {
               Changelog
             </button>
           )}
+          <button
+            onClick={() => setShowAchievements(true)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: 11, color: '#383838', fontFamily: FF,
+              padding: 0, letterSpacing: '0.02em',
+              textDecoration: 'underline', textDecorationColor: '#282828',
+            }}
+          >
+            🏆 {achievements.all.filter(a => a.unlockedAt).length}/{achievements.all.length}
+          </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -403,7 +455,7 @@ export function SettingsApp() {
             <>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <span style={{ fontSize: 11, color: C_ACC, fontFamily: FF, fontWeight: 600 }}>
-                  v{updater.version} available
+                  v{updater.version} available{updater.downloadSize ? ` · ${updater.formatSize(updater.downloadSize)}` : ''}
                 </span>
                 {updater.body && (
                   <span style={{
