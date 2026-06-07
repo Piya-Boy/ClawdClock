@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { fetchUsage } from '../services/ClaudeUsageService';
-import { formatCountdown } from '../utils/countdown';
+import { formatCountdown, formatResetDate } from '../utils/countdown';
 import type { UsageState } from '../types';
 
 export const useUsageStore = create<UsageState>()((set, get) => ({
@@ -24,8 +24,8 @@ export const useUsageStore = create<UsageState>()((set, get) => ({
         weeklyPct: data.weeklyUsage,
         sessionResetAt: data.sessionResetAt,
         weeklyResetAt: data.weeklyResetAt,
-        sessionCountdown: data.sessionCountdown,
-        weeklyCountdown: data.weeklyCountdown,
+        sessionCountdown: formatCountdown(data.sessionResetAt),
+        weeklyCountdown: formatResetDate(data.weeklyResetAt),
         isLoading: false,
         lastUpdated: new Date(),
       });
@@ -39,11 +39,10 @@ export const useUsageStore = create<UsageState>()((set, get) => ({
 }));
 
 export function tickCountdowns() {
-  const { sessionResetAt, weeklyResetAt } = useUsageStore.getState();
-  if (sessionResetAt && weeklyResetAt) {
+  const { sessionResetAt } = useUsageStore.getState();
+  if (sessionResetAt) {
     useUsageStore.setState({
       sessionCountdown: formatCountdown(sessionResetAt),
-      weeklyCountdown: formatCountdown(weeklyResetAt),
     });
   }
 }

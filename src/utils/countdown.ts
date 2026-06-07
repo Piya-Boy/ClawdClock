@@ -3,13 +3,20 @@ export function formatCountdown(isoDate: string): string {
   if (diff <= 0) return '0m';
 
   const totalMinutes = Math.floor(diff / 60000);
-  const days    = Math.floor(totalMinutes / 1440);
-  const hours   = Math.floor((totalMinutes % 1440) / 60);
+  const hours   = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
 
-  if (days > 0) return `${days}d ${hours}h`;
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
+}
+
+// "Tue 12:00 AM" format for weekly reset (day-of-week + local time)
+export function formatResetDate(isoDate: string): string {
+  if (!isoDate) return '--';
+  const d = new Date(isoDate);
+  const day = d.toLocaleDateString('en-US', { weekday: 'short' });
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${day} ${time}`;
 }
 
 export function formatTimeAgo(date: Date): string {

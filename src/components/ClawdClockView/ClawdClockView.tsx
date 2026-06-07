@@ -72,7 +72,7 @@ export function ClawdClockView({
         </div>
         <UsageSection label="SESSION (5H)" pct={sessionPct} color={sessionColor} resetIn={sessionCountdown} theme={theme} />
         <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
-        <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} theme={theme} />
+        <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} resetLabel="RESETS" theme={theme} />
       </div>
     </div>
   );

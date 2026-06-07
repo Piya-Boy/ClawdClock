@@ -8,10 +8,11 @@ interface Props {
   pct: number;
   color: string;
   resetIn: string;
+  resetLabel?: string;
   theme: Theme;
 }
 
-export function UsageSection({ label, pct, color, resetIn, theme }: Props) {
+export function UsageSection({ label, pct, color, resetIn, resetLabel = 'RESETS IN', theme }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{
@@ -48,7 +49,7 @@ export function UsageSection({ label, pct, color, resetIn, theme }: Props) {
         color: theme.resetColor,
         fontFamily: FF,
       }}>
-        RESETS IN {resetIn}
+        {resetLabel} {resetIn}
       </div>
     </div>
   );
