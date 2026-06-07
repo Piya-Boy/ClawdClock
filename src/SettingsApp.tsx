@@ -167,40 +167,14 @@ export function SettingsApp() {
             label="Theme"
             desc="Visual style for the clock display."
             control={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 172 }}>
-                {THEME_ORDER.map(id => {
-                  const t = THEMES[id];
-                  const active = id === themeId;
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => setTheme(id as ThemeId)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 10px',
-                        background: active ? 'rgba(255,107,61,0.12)' : 'transparent',
-                        border: `1px solid ${active ? 'rgba(255,107,61,0.4)' : 'rgba(255,255,255,0.07)'}`,
-                        borderRadius: 6, cursor: 'pointer',
-                        transition: 'all 0.12s ease',
-                      }}
-                    >
-                      <div style={{
-                        width: 12, height: 12, borderRadius: 3, flexShrink: 0,
-                        background: t.headerColor,
-                        boxShadow: `0 0 0 1px rgba(0,0,0,0.4)`,
-                      }} />
-                      <span style={{
-                        fontSize: 11, fontWeight: active ? 700 : 500,
-                        color: active ? '#e0e0e0' : '#555',
-                        fontFamily: FF, letterSpacing: '0.01em',
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {t.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              <Dropdown
+                value={THEMES[themeId].name}
+                options={THEME_ORDER.map(id => THEMES[id].name)}
+                onChange={v => {
+                  const id = THEME_ORDER.find(id => THEMES[id].name === v);
+                  if (id) setTheme(id as ThemeId);
+                }}
+              />
             }
           />
           <SettingRow
