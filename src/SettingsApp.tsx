@@ -577,6 +577,23 @@ export function SettingsApp() {
           {updater.installing && (
             <span style={{ fontSize: 11, color: C_ACC, fontFamily: FF, fontWeight: 600 }}>Installing…</span>
           )}
+          {updater.rollingBack && (
+            <span style={{ fontSize: 11, color: '#FFB800', fontFamily: FF, fontWeight: 600 }}>Rolling back…</span>
+          )}
+          {updater.error && !updater.rollingBack && (
+            <button
+              onClick={updater.rollback}
+              style={{
+                padding: '6px 14px',
+                background: 'transparent',
+                border: '1px solid rgba(255,184,0,0.3)', borderRadius: 5,
+                color: '#FFB800', fontFamily: FF, fontSize: 11, fontWeight: 600,
+                cursor: 'pointer', letterSpacing: '0.02em',
+              }}
+            >
+              Rollback
+            </button>
+          )}
           {!updater.checking && (
             <button
               onClick={updater.check}

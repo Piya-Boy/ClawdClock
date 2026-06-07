@@ -11,6 +11,7 @@ export interface UpdateState {
   downloadUrl: string | null;
   downloadSize: number | null;
   installing: boolean;
+  rollingBack: boolean;
   error: string | null;
   lastChecked: Date | null;
 }
@@ -51,6 +52,7 @@ export function useUpdater() {
     downloadUrl: null,
     downloadSize: null,
     installing: false,
+    rollingBack: false,
     error: null,
     lastChecked: null,
   });
@@ -92,6 +94,16 @@ export function useUpdater() {
     }
   };
 
+  const rollback = async () => {
+    setState(s => ({ ...s, rollingBack: true, error: null }));
+    try {
+      await invoke('rollback_update');
+      setState(s => ({ ...s, rollingBack: false }));
+    } catch (e) {
+      setState(s => ({ ...s, rollingBack: false, error: String(e) }));
+    }
+  };
+
   useEffect(() => {
     if (!autoUpdate) return;
 
@@ -108,5 +120,5 @@ export function useUpdater() {
     };
   }, [autoUpdate, checkFrequency, updateChannel]);
 
-  return { ...state, formatSize: (n: number) => formatBytes(n), check, install };
+  return { ...state, formatSize: (n: number) => formatBytes(n), check, install, rollback };
 }

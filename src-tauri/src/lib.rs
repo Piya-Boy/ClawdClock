@@ -591,12 +591,39 @@ async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, S
 #[tauri::command]
 async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
     use tauri_plugin_updater::UpdaterExt;
+
+    // Backup current exe before install
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let backup = exe.with_extension("exe.bak");
+    let _ = std::fs::copy(&exe, &backup); // best-effort, ignore fail
+
     let updater = app.updater().map_err(|e| e.to_string())?;
     if let Some(update) = updater.check().await.map_err(|e| e.to_string())? {
         update.download_and_install(|_, _| {}, || {})
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| {
+                // Restore backup on failure
+                if backup.exists() {
+                    let _ = std::fs::copy(&backup, &exe);
+                    let _ = std::fs::remove_file(&backup);
+                }
+                e.to_string()
+            })?;
     }
+    // Clean up backup on success
+    let _ = std::fs::remove_file(&backup);
+    Ok(())
+}
+
+#[tauri::command]
+fn rollback_update() -> Result<(), String> {
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let backup = exe.with_extension("exe.bak");
+    if !backup.exists() {
+        return Err("no backup found".into());
+    }
+    std::fs::copy(&backup, &exe).map_err(|e| e.to_string())?;
+    std::fs::remove_file(&backup).map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -746,6 +773,7 @@ pub fn run_with_mode(mode: ScrMode) {
             install_update,
             update_tray_tooltip,
             set_clock_hotkey,
+            rollback_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

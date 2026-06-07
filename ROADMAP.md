@@ -498,8 +498,6 @@ Target: Professional Setup
 * [x] GitHub Activity
 * [x] GitHub Contributions
 * [x] CI/CD Status
-* [x] OpenAI Usage
-* [x] Ollama Usage
 
 
 ## Fun Features
@@ -546,7 +544,7 @@ Target: Seamless Updates
 
 ### Failure Handling
 
-* [ ] Rollback support
+* [x] Rollback support
 * [x] Failed update recovery (error shown in UI)
 * [x] Network error handling
 
