@@ -16,13 +16,14 @@ export type SleepAfterOption =
 
 export type UsageStatus = 'healthy' | 'warning' | 'critical';
 
-import type { ThemeId } from '../themes';
+import type { ThemeId, LayoutId } from '../themes';
 
 export interface SettingsState {
   activateAfter: ActivateAfterOption;
   sleepAfter: SleepAfterOption;
   timeFormat: TimeFormat;
   theme: ThemeId;
+  layout: LayoutId;
   launchAtStartup: boolean;
   selectedMonitor: number;
   lockScreenEnabled: boolean;
@@ -30,6 +31,7 @@ export interface SettingsState {
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
   setTheme: (v: ThemeId) => void;
+  setLayout: (v: LayoutId) => void;
   setLaunchAtStartup: (v: boolean) => void;
   setSelectedMonitor: (v: number) => void;
   setLockScreenEnabled: (v: boolean) => void;

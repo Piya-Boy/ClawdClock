@@ -444,11 +444,11 @@ Target: Personalization
 
 ## Layouts
 
-* [ ] Vertical layout
-* [ ] Horizontal layout
-* [ ] Compact layout
-* [ ] Minimal layout
-* [ ] Ultra Minimal layout
+* [x] Vertical layout
+* [x] Horizontal layout
+* [x] Compact layout
+* [x] Minimal layout
+* [x] Ultra Minimal layout
 
 ---
 
