@@ -1,9 +1,6 @@
-import { useState, useCallback } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { FlipClock } from './components/FlipClock/FlipClock';
 import { BouncingMascot } from './components/ClawdMascot/BouncingMascot';
 import { UsageSection } from './components/UsagePanel/UsageSection';
-import { PasswordPrompt } from './components/PasswordPrompt/PasswordPrompt';
 import { EscapeBar } from './components/EscapeBar/EscapeBar';
 import { useClock } from './hooks/useClock';
 import { useScale } from './hooks/useScale';
@@ -17,6 +14,8 @@ import { getTheme } from './themes';
 import type { LayoutId } from './themes';
 import { useOledShift } from './hooks/useOledShift';
 import './styles/globals.css';
+
+const IS_DEV = import.meta.env.DEV;
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -120,21 +119,11 @@ export function App() {
   const scale = useScale(1920, 1080);
 
   useClaudeUsage();
+  useClockExit();
 
-  const { lockScreenEnabled, lockPassword, theme: themeId, layout, oledMode } = useSettingsStore();
+  const { lockScreenEnabled, theme: themeId, layout, oledMode } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
-
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const handleRequestUnlock = useCallback(() => setShowPasswordPrompt(true), []);
-  const handleUnlockSuccess = useCallback(() => {
-    setShowPasswordPrompt(false);
-    invoke('hide_clock_window').catch(() => {});
-  }, []);
-  const handleUnlockCancel = useCallback(() => setShowPasswordPrompt(false), []);
-
   const escapeBar = useEscapeBar();
-
-  useClockExit(lockPassword ? handleRequestUnlock : undefined);
   const theme = getTheme(themeId);
 
   const {
@@ -152,45 +141,19 @@ export function App() {
       background: theme.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      {showPasswordPrompt && (
-        <PasswordPrompt
-          onSuccess={handleUnlockSuccess}
-          onCancel={handleUnlockCancel}
-          validate={(input) => input === lockPassword}
+      {/* Dev-only: escape bar with controls */}
+      {IS_DEV && (
+        <EscapeBar
+          visible={escapeBar.visible}
+          now={now}
+          onKeepAlive={escapeBar.keepAlive}
+          onHide={escapeBar.hide}
+          lockScreenEnabled={lockScreenEnabled}
+          lockPassword=""
         />
       )}
 
-      <EscapeBar
-        visible={escapeBar.visible}
-        now={now}
-        onKeepAlive={escapeBar.keepAlive}
-        onHide={escapeBar.hide}
-        onRequestUnlock={lockPassword ? handleRequestUnlock : undefined}
-        lockScreenEnabled={lockScreenEnabled}
-        lockPassword={lockPassword}
-      />
-
       <BouncingMascot />
-
-      {/* Lock indicator */}
-      {lockScreenEnabled && (
-        <div style={{
-          position: 'fixed', bottom: 28, left: 32,
-          zIndex: 998, pointerEvents: 'none',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-            <rect x="2" y="7" width="10" height="8" rx="2" fill={theme.offlineColor}/>
-            <path d="M4 7V5a3 3 0 016 0v2" stroke={theme.offlineColor} strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-          <span style={{
-            fontSize: 11, fontWeight: 600, color: theme.offlineColor,
-            fontFamily: FF, letterSpacing: '0.12em',
-          }}>
-            LOCKED
-          </span>
-        </div>
-      )}
 
       {/* fixed 1920×1080 canvas, scales to viewport */}
       <div style={{

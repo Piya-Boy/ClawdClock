@@ -1,28 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { useSettingsStore } from '../stores/settingsStore';
 
-const MOUSE_THRESHOLD_PX = 10;
-const DEBOUNCE_MS = 300;
+const MOUSE_THRESHOLD_PX = 8;
+const DEBOUNCE_MS = 150;
+const IS_DEV = import.meta.env.DEV;
 
-export function useClockExit(onRequestUnlock?: () => void) {
+// In production: any interaction hides the clock immediately — no confirmation, no password.
+// In dev: EscapeBar handles ESC/F11/Ctrl+, so skip those keys to avoid double-fire.
+export function useClockExit() {
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const lastFired = useRef(0);
-  const { lockScreenEnabled, lockPassword } = useSettingsStore();
 
   useEffect(() => {
     const dismiss = () => {
       const now = Date.now();
       if (now - lastFired.current < DEBOUNCE_MS) return;
       lastFired.current = now;
-
-      if (lockScreenEnabled) {
-        if (lockPassword && onRequestUnlock) {
-          onRequestUnlock();
-        }
-        // no password set + locked = block exit entirely
-        return;
-      }
       invoke('hide_clock_window').catch(() => {});
     };
 
@@ -36,18 +29,28 @@ export function useClockExit(onRequestUnlock?: () => void) {
       if (dx > MOUSE_THRESHOLD_PX || dy > MOUSE_THRESHOLD_PX) dismiss();
     };
 
+    const onMouseDown = () => dismiss();
+
     const onKeyDown = (e: KeyboardEvent) => {
-      // EscapeBar handles these keys — don't double-fire
-      if (e.key === 'Escape' || e.key === 'F11') return;
-      if ((e.ctrlKey || e.metaKey) && e.key === ',') return;
+      if (IS_DEV) {
+        // Let EscapeBar handle these in dev
+        if (e.key === 'Escape' || e.key === 'F11') return;
+        if ((e.ctrlKey || e.metaKey) && e.key === ',') return;
+      }
       dismiss();
     };
 
+    const onTouchStart = () => dismiss();
+
     window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousedown', onMouseDown);
     window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('touchstart', onTouchStart);
     };
-  }, [lockScreenEnabled, lockPassword, onRequestUnlock]);
+  }, []);
 }

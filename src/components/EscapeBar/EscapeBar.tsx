@@ -4,6 +4,7 @@ import mascotIcon from '../../assets/mascot.gif';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 const BAR_H = 48;
+const IS_DEV = import.meta.env.DEV;
 
 interface Props {
   visible: boolean;
@@ -53,6 +54,9 @@ function IconBtn({ label, title, onClick, children }: {
 }
 
 export function EscapeBar({ visible, now, onKeepAlive, onHide, onRequestUnlock, lockScreenEnabled, lockPassword }: Props) {
+  // Production: pure ambient mode — no controls, no overlays
+  if (!IS_DEV) return null;
+
   const h = pad(now.getHours());
   const m = pad(now.getMinutes());
   const timeStr = `${h}:${m}`;
