@@ -12,6 +12,7 @@ export const useSettingsStore = create<SettingsState>()(
       timeFormat: '24',
       theme: 'classic' as ThemeId,
       layout: 'horizontal' as LayoutId,
+      oledMode: false,
       launchAtStartup: false,
       selectedMonitor: 0,
       lockScreenEnabled: false,
@@ -20,6 +21,7 @@ export const useSettingsStore = create<SettingsState>()(
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
       setTheme: (v: ThemeId) => set({ theme: v }),
       setLayout: (v: LayoutId) => set({ layout: v }),
+      setOledMode: (v: boolean) => set({ oledMode: v }),
       setLaunchAtStartup: (v: boolean) => {
         set({ launchAtStartup: v });
         invoke('set_autostart', { enable: v }).catch(() => {});

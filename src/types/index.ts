@@ -24,6 +24,7 @@ export interface SettingsState {
   timeFormat: TimeFormat;
   theme: ThemeId;
   layout: LayoutId;
+  oledMode: boolean;
   launchAtStartup: boolean;
   selectedMonitor: number;
   lockScreenEnabled: boolean;
@@ -32,6 +33,7 @@ export interface SettingsState {
   setTimeFormat: (v: TimeFormat) => void;
   setTheme: (v: ThemeId) => void;
   setLayout: (v: LayoutId) => void;
+  setOledMode: (v: boolean) => void;
   setLaunchAtStartup: (v: boolean) => void;
   setSelectedMonitor: (v: number) => void;
   setLockScreenEnabled: (v: boolean) => void;

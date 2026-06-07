@@ -10,6 +10,7 @@ import { useSettingsStore } from './stores/settingsStore';
 import { formatTimeAgo } from './utils/countdown';
 import { getTheme } from './themes';
 import type { LayoutId } from './themes';
+import { useOledShift } from './hooks/useOledShift';
 import './styles/globals.css';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
@@ -116,7 +117,8 @@ export function App() {
   useClaudeUsage();
   useClockExit();
 
-  const { lockScreenEnabled, theme: themeId, layout } = useSettingsStore();
+  const { lockScreenEnabled, theme: themeId, layout, oledMode } = useSettingsStore();
+  const oledShift = useOledShift(oledMode);
   const theme = getTheme(themeId);
 
   const {
@@ -159,8 +161,9 @@ export function App() {
       {/* fixed 1920×1080 canvas, scales to viewport */}
       <div style={{
         width: 1920, height: 1080,
-        transform: `scale(${scale})`,
+        transform: `scale(${scale}) translate(${oledShift.x}px, ${oledShift.y}px)`,
         transformOrigin: 'center center',
+        transition: oledMode ? 'transform 2s ease' : undefined,
         background: theme.bg,
         display: 'flex',
         flexShrink: 0,

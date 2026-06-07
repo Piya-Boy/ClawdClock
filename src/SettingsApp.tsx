@@ -27,7 +27,7 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, theme: themeId, layout, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setLayout, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, theme: themeId, layout, oledMode, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setLayout, setOledMode, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
   const previewTheme = getTheme(themeId);
   const monitors = useMonitors();
 
@@ -176,6 +176,11 @@ export function SettingsApp() {
             }
           />
           <SettingRow
+            label="OLED Mode"
+            desc="Slowly shift pixels to prevent burn-in on OLED displays."
+            control={<Toggle value={oledMode} onChange={setOledMode} />}
+          />
+          <SettingRow
             label="Launch at Startup"
             desc="Start ClawdClock automatically when you log in."
             control={<Toggle value={launchAtStartup} onChange={setLaunchAtStartup} />}
@@ -186,11 +191,22 @@ export function SettingsApp() {
               desc="Monitor to show ClawdClock on."
               control={
                 <Dropdown
-                  value={monitors[selectedMonitor]
-                    ? `${monitors[selectedMonitor].name}${monitors[selectedMonitor].is_primary ? ' (Primary)' : ''}`
-                    : 'Primary'}
-                  options={monitors.map(m => `${m.name}${m.is_primary ? ' (Primary)' : ''}`)}
+                  value={
+                    selectedMonitor === -1
+                      ? 'All Monitors'
+                      : monitors[selectedMonitor]
+                        ? `${monitors[selectedMonitor].name}${monitors[selectedMonitor].is_primary ? ' (Primary)' : ''}`
+                        : 'Primary'
+                  }
+                  options={[
+                    ...monitors.map(m => `${m.name}${m.is_primary ? ' (Primary)' : ''}`),
+                    'All Monitors',
+                  ]}
                   onChange={v => {
+                    if (v === 'All Monitors') {
+                      setSelectedMonitor(-1);
+                      return;
+                    }
                     const idx = monitors.findIndex(
                       m => `${m.name}${m.is_primary ? ' (Primary)' : ''}` === v
                     );
@@ -218,7 +234,13 @@ export function SettingsApp() {
           {/* Preview Now — simple action row */}
           <button
             className="preview-btn"
-            onClick={() => invoke('show_clock_on_monitor', { monitorId: selectedMonitor }).catch(() => {})}
+            onClick={() => {
+              if (selectedMonitor === -1) {
+                invoke('show_clock_on_all_monitors').catch(() => {});
+              } else {
+                invoke('show_clock_on_monitor', { monitorId: selectedMonitor }).catch(() => {});
+              }
+            }}
             style={{
               marginTop: 20,
               width: '100%', padding: '10px 0',

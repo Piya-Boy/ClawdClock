@@ -55,7 +55,7 @@ Target: First public release
 * [x] Weekly usage display
 * [x] Reset countdown
 * [x] Auto refresh every 60 seconds
-* [ ] Offline cache
+* [x] Offline cache
 * [x] Last updated indicator
 
 Implement Claude Usage API integration for ClawdClock.
@@ -363,7 +363,7 @@ Target: Replace Fliqlo
 * [x] Borderless mode
 * [x] Fullscreen mode
 * [x] Always-on-top mode
-* [ ] OLED optimized mode
+* [x] OLED optimized mode
 
 ## Exit Triggers
 
@@ -375,7 +375,7 @@ Target: Replace Fliqlo
 * [x] Detect monitors
 * [x] Primary monitor mode
 * [x] Selected monitor mode
-* [ ] All monitor mode
+* [x] All monitor mode
 
 ---
 

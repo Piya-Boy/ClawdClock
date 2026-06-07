@@ -28,10 +28,18 @@ export function useIdleDetection() {
         const shouldShow = idle >= thresholdSeconds;
 
         if (shouldShow && !clockVisible.current) {
-          await invoke('show_clock_on_monitor', { monitorId: selectedMonitor });
+          if (selectedMonitor === -1) {
+            await invoke('show_clock_on_all_monitors');
+          } else {
+            await invoke('show_clock_on_monitor', { monitorId: selectedMonitor });
+          }
           clockVisible.current = true;
         } else if (!shouldShow && clockVisible.current) {
-          await invoke('hide_clock_window');
+          if (selectedMonitor === -1) {
+            await invoke('hide_clock_all_monitors');
+          } else {
+            await invoke('hide_clock_window');
+          }
           clockVisible.current = false;
         }
       } catch {

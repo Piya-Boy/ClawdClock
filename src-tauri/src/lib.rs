@@ -139,7 +139,7 @@ struct UsageResponse {
     seven_day: UsageBucket,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UsageResult {
     pub session_usage: f64,
     pub weekly_usage: f64,
@@ -147,9 +147,37 @@ pub struct UsageResult {
     pub weekly_resets_at: String,
 }
 
+fn usage_cache_path(app: &tauri::AppHandle) -> std::path::PathBuf {
+    app.path().app_data_dir()
+        .expect("no app data dir")
+        .join("usage_cache.json")
+}
+
+fn save_usage_cache(app: &tauri::AppHandle, result: &UsageResult) {
+    let path = usage_cache_path(app);
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    if let Ok(data) = serde_json::to_string(result) {
+        let _ = fs::write(path, data);
+    }
+}
+
+fn load_usage_cache(app: &tauri::AppHandle) -> Option<UsageResult> {
+    let path = usage_cache_path(app);
+    let data = fs::read_to_string(path).ok()?;
+    serde_json::from_str(&data).ok()
+}
+
 #[tauri::command]
-async fn fetch_claude_usage() -> Result<UsageResult, String> {
-    let token = read_access_token()?;
+async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String> {
+    let token = match read_access_token() {
+        Ok(t) => t,
+        Err(e) => {
+            return load_usage_cache(&app)
+                .ok_or_else(|| e);
+        }
+    };
 
     let client = reqwest::Client::builder()
         .user_agent("ClawdClock/0.1")
@@ -160,24 +188,35 @@ async fn fetch_claude_usage() -> Result<UsageResult, String> {
         .get("https://api.anthropic.com/api/oauth/usage")
         .bearer_auth(&token)
         .send()
-        .await
-        .map_err(|e| format!("network error: {e}"))?;
+        .await;
+
+    let resp = match resp {
+        Ok(r) => r,
+        Err(e) => {
+            return load_usage_cache(&app)
+                .ok_or_else(|| format!("network error: {e}"));
+        }
+    };
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
-        return Err(format!("API error {status}: {body}"));
+        return load_usage_cache(&app)
+            .ok_or_else(|| format!("API error {status}: {body}"));
     }
 
     let data: UsageResponse = resp.json().await
         .map_err(|e| format!("parse error: {e}"))?;
 
-    Ok(UsageResult {
+    let result = UsageResult {
         session_usage: data.five_hour.utilization,
         weekly_usage: data.seven_day.utilization,
         session_resets_at: data.five_hour.resets_at,
         weekly_resets_at: data.seven_day.resets_at,
-    })
+    };
+
+    save_usage_cache(&app, &result);
+    Ok(result)
 }
 
 /* ── Idle Detection ─────────────────────────────────────────── */
@@ -318,6 +357,80 @@ fn show_clock_on_monitor(app: tauri::AppHandle, monitor_id: usize) -> Result<(),
     Ok(())
 }
 
+#[tauri::command]
+fn show_clock_on_all_monitors(app: tauri::AppHandle) -> Result<(), String> {
+    let monitors: Vec<Monitor> = app.available_monitors().unwrap_or_default();
+    if monitors.is_empty() {
+        return Err("no monitors found".into());
+    }
+
+    // Show the main clock window on primary (first) monitor
+    let primary = monitors.iter()
+        .enumerate()
+        .find(|(_, m)| {
+            app.primary_monitor().ok().flatten()
+                .map(|p| p.name() == m.name())
+                .unwrap_or(false)
+        })
+        .map(|(i, _)| i)
+        .unwrap_or(0);
+
+    let win = app.get_webview_window("clock")
+        .ok_or("clock window not found")?;
+    let m = &monitors[primary];
+    win.set_position(tauri::PhysicalPosition::new(m.position().x, m.position().y))
+        .map_err(|e| e.to_string())?;
+    win.set_size(tauri::PhysicalSize::new(m.size().width, m.size().height))
+        .map_err(|e| e.to_string())?;
+    win.show().map_err(|e| e.to_string())?;
+    win.set_focus().map_err(|e| e.to_string())?;
+
+    // Spawn/show extra windows for secondary monitors
+    for (i, m) in monitors.iter().enumerate() {
+        if i == primary { continue; }
+        let label = format!("clock-ext-{i}");
+        let pos  = m.position();
+        let size = m.size();
+
+        if let Some(existing) = app.get_webview_window(&label) {
+            let _ = existing.set_position(tauri::PhysicalPosition::new(pos.x, pos.y));
+            let _ = existing.set_size(tauri::PhysicalSize::new(size.width, size.height));
+            let _ = existing.show();
+        } else {
+            let _ = WebviewWindowBuilder::new(
+                &app,
+                &label,
+                tauri::WebviewUrl::App("index.html".into()),
+            )
+            .position(pos.x as f64, pos.y as f64)
+            .inner_size(size.width as f64, size.height as f64)
+            .decorations(false)
+            .always_on_top(true)
+            .skip_taskbar(true)
+            .resizable(false)
+            .build();
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn hide_clock_all_monitors(app: tauri::AppHandle) -> Result<(), String> {
+    // Hide main clock
+    if let Some(win) = app.get_webview_window("clock") {
+        let _ = win.hide();
+    }
+    // Hide any extension windows
+    let monitors: Vec<Monitor> = app.available_monitors().unwrap_or_default();
+    for i in 0..monitors.len() {
+        let label = format!("clock-ext-{i}");
+        if let Some(win) = app.get_webview_window(&label) {
+            let _ = win.hide();
+        }
+    }
+    Ok(())
+}
+
 /* ── Registry / Screensaver ─────────────────────────────────── */
 
 #[tauri::command]
@@ -399,6 +512,8 @@ pub fn run_with_mode(mode: ScrMode) {
             set_autostart,
             list_monitors,
             show_clock_on_monitor,
+            show_clock_on_all_monitors,
+            hide_clock_all_monitors,
             set_lock_screen,
             register_screensaver,
         ])
