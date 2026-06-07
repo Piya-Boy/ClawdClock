@@ -44,12 +44,15 @@ jobs:
           includeUpdaterJson: true
 
       - name: Package screensaver (.scr)
-        run: npm run package-scr
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart('v')
+          ./build-scr.ps1 -Version $version
 
       - name: Upload .scr to release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist-scr/ClawdClock.scr
+          files: src-tauri/target/release/bundle/ClawdClock_*_x64.scr
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
