@@ -28,6 +28,7 @@ export interface SettingsState {
   launchAtStartup: boolean;
   selectedMonitor: number;
   lockScreenEnabled: boolean;
+  autoUpdate: boolean;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -37,6 +38,7 @@ export interface SettingsState {
   setLaunchAtStartup: (v: boolean) => void;
   setSelectedMonitor: (v: number) => void;
   setLockScreenEnabled: (v: boolean) => void;
+  setAutoUpdate: (v: boolean) => void;
 }
 
 export interface UsageData {

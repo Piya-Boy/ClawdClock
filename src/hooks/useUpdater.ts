@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useSettingsStore } from '../stores/settingsStore';
 
 export interface UpdateState {
   checking: boolean;
@@ -50,7 +51,7 @@ export function useUpdater() {
   };
 
   useEffect(() => {
-    check();
+    if (useSettingsStore.getState().autoUpdate) check();
   }, []);
 
   return { ...state, check, install };

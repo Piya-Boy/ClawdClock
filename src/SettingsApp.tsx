@@ -41,10 +41,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, autoUpdate,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setAutoUpdate,
   } = useSettingsStore();
 
   const {
@@ -237,6 +237,12 @@ export function SettingsApp() {
               }
             />
           )}
+
+          <SettingRow
+            label="Auto Update"
+            desc="Check for updates automatically on startup."
+            control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
+          />
 
           {/* Preview Now */}
           <button
