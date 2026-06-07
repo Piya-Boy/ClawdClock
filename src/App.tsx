@@ -1,6 +1,9 @@
+import { useState, useCallback } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { FlipClock } from './components/FlipClock/FlipClock';
 import { BouncingMascot } from './components/ClawdMascot/BouncingMascot';
 import { UsageSection } from './components/UsagePanel/UsageSection';
+import { PasswordPrompt } from './components/PasswordPrompt/PasswordPrompt';
 import { useClock } from './hooks/useClock';
 import { useScale } from './hooks/useScale';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
@@ -115,10 +118,19 @@ export function App() {
   const scale = useScale(1920, 1080);
 
   useClaudeUsage();
-  useClockExit();
 
-  const { lockScreenEnabled, theme: themeId, layout, oledMode } = useSettingsStore();
+  const { lockScreenEnabled, lockPassword, theme: themeId, layout, oledMode } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
+
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const handleRequestUnlock = useCallback(() => setShowPasswordPrompt(true), []);
+  const handleUnlockSuccess = useCallback(() => {
+    setShowPasswordPrompt(false);
+    invoke('hide_clock_window').catch(() => {});
+  }, []);
+  const handleUnlockCancel = useCallback(() => setShowPasswordPrompt(false), []);
+
+  useClockExit(lockPassword ? handleRequestUnlock : undefined);
   const theme = getTheme(themeId);
 
   const {
@@ -136,6 +148,14 @@ export function App() {
       background: theme.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
+      {showPasswordPrompt && (
+        <PasswordPrompt
+          onSuccess={handleUnlockSuccess}
+          onCancel={handleUnlockCancel}
+          validate={(input) => input === lockPassword}
+        />
+      )}
+
       <BouncingMascot />
 
       {/* Lock indicator */}

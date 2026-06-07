@@ -5,17 +5,24 @@ import { useSettingsStore } from '../stores/settingsStore';
 const MOUSE_THRESHOLD_PX = 10;
 const DEBOUNCE_MS = 300;
 
-export function useClockExit() {
+export function useClockExit(onRequestUnlock?: () => void) {
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const lastFired = useRef(0);
-  const { lockScreenEnabled } = useSettingsStore();
+  const { lockScreenEnabled, lockPassword } = useSettingsStore();
 
   useEffect(() => {
     const dismiss = () => {
-      if (lockScreenEnabled) return;
       const now = Date.now();
       if (now - lastFired.current < DEBOUNCE_MS) return;
       lastFired.current = now;
+
+      if (lockScreenEnabled) {
+        if (lockPassword && onRequestUnlock) {
+          onRequestUnlock();
+        }
+        // no password set + locked = block exit entirely
+        return;
+      }
       invoke('hide_clock_window').catch(() => {});
     };
 
@@ -37,5 +44,5 @@ export function useClockExit() {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [lockScreenEnabled]);
+  }, [lockScreenEnabled, lockPassword, onRequestUnlock]);
 }

@@ -333,7 +333,7 @@ Then generate code.
 * [x] Enable Lock Screen Mode
 * [x] Exit on Mouse Movement
 * [x] Exit on Keyboard Activity
-* [ ] Password Required Mode
+* [x] Password Required Mode
 
 ## Local Storage
 
@@ -401,12 +401,12 @@ Target: Developer Ambient Lock Screen
 
 * [x] Mouse movement (when not locked)
 * [x] Keyboard activity (when not locked)
-* [ ] Password required mode
+* [x] Password required mode
 
 ## Security
 
-* [ ] Optional unlock password
-* [ ] Password prompt screen
+* [x] Optional unlock password
+* [x] Password prompt screen
 * [x] Settings stored locally (Zustand persist)
 
 ---
@@ -475,8 +475,8 @@ Target: Professional Setup
 
 ## Distribution
 
-* [ ] Windows Installer
-* [ ] Windows Screensaver Package
+* [x] Windows Installer
+* [x] Windows Screensaver Package
 * [ ] macOS Package
 * [ ] Linux AppImage
 

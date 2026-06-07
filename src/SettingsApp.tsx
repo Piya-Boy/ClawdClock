@@ -27,7 +27,7 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, theme: themeId, layout, oledMode, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setLayout, setOledMode, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, theme: themeId, layout, oledMode, lockPassword, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setLayout, setOledMode, setLockPassword, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
   const previewTheme = getTheme(themeId);
   const monitors = useMonitors();
 
@@ -230,6 +230,29 @@ export function SettingsApp() {
               />
             }
           />
+          {lockScreenEnabled && (
+            <SettingRow
+              label="Lock Password"
+              desc="Required to exit lock screen. Leave empty to disable."
+              control={
+                <input
+                  type="password"
+                  value={lockPassword}
+                  onChange={e => setLockPassword(e.target.value)}
+                  placeholder="Set password…"
+                  autoComplete="new-password"
+                  style={{
+                    width: 160, padding: '7px 10px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 6, outline: 'none',
+                    color: '#ccc', fontFamily: FF, fontSize: 13,
+                    letterSpacing: '0.08em',
+                  }}
+                />
+              }
+            />
+          )}
 
           {/* Preview Now — simple action row */}
           <button

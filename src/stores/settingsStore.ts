@@ -13,6 +13,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: 'classic' as ThemeId,
       layout: 'horizontal' as LayoutId,
       oledMode: false,
+      lockPassword: '',
       launchAtStartup: false,
       selectedMonitor: 0,
       lockScreenEnabled: false,
@@ -22,6 +23,7 @@ export const useSettingsStore = create<SettingsState>()(
       setTheme: (v: ThemeId) => set({ theme: v }),
       setLayout: (v: LayoutId) => set({ layout: v }),
       setOledMode: (v: boolean) => set({ oledMode: v }),
+      setLockPassword: (v: string) => set({ lockPassword: v }),
       setLaunchAtStartup: (v: boolean) => {
         set({ launchAtStartup: v });
         invoke('set_autostart', { enable: v }).catch(() => {});
