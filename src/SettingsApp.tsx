@@ -27,7 +27,7 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, launchAtStartup, selectedMonitor, setActivateAfter, setSleepAfter, setTimeFormat, setLaunchAtStartup, setSelectedMonitor } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
   const monitors = useMonitors();
 
   const is12     = timeFormat === '12';
@@ -125,6 +125,20 @@ export function SettingsApp() {
               }
             />
           )}
+
+          <SettingRow
+            label="Lock Screen Mode"
+            desc="Block mouse and keyboard while ClawdClock is active."
+            control={
+              <Toggle
+                value={lockScreenEnabled}
+                onChange={v => {
+                  setLockScreenEnabled(v);
+                  invoke('set_lock_screen', { locked: v }).catch(() => {});
+                }}
+              />
+            }
+          />
 
           {/* Preview Now — simple action row */}
           <button

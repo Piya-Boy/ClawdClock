@@ -6,6 +6,7 @@ import { useScale } from './hooks/useScale';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { useClockExit } from './hooks/useClockExit';
 import { useUsageStore } from './stores/usageStore';
+import { useSettingsStore } from './stores/settingsStore';
 import { formatTimeAgo } from './utils/countdown';
 import './styles/globals.css';
 
@@ -28,6 +29,7 @@ export function App() {
   useClaudeUsage();
   useClockExit();
 
+  const { lockScreenEnabled } = useSettingsStore();
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
@@ -44,6 +46,26 @@ export function App() {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <BouncingMascot />
+
+      {/* Lock indicator */}
+      {lockScreenEnabled && (
+        <div style={{
+          position: 'fixed', bottom: 28, left: 32,
+          zIndex: 998, pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+            <rect x="2" y="7" width="10" height="8" rx="2" fill="#2a2a2a"/>
+            <path d="M4 7V5a3 3 0 016 0v2" stroke="#2a2a2a" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          <span style={{
+            fontSize: 11, fontWeight: 600, color: '#2a2a2a',
+            fontFamily: FF, letterSpacing: '0.12em',
+          }}>
+            LOCKED
+          </span>
+        </div>
+      )}
 
       {/* fixed 1920×1080 canvas, scales to viewport */}
       <div style={{

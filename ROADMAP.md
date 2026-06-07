@@ -385,29 +385,29 @@ Target: Developer Ambient Lock Screen
 
 ## Lock Screen Experience
 
-* [ ] Fullscreen lock mode
-* [ ] Borderless lock mode
+* [x] Fullscreen lock mode
+* [x] Borderless lock mode
 * [ ] Hide taskbar
-* [ ] Focused window mode
-* [ ] Dedicated lock screen layout
+* [x] Focused window mode
+* [x] Lock indicator UI
 
 ## Launch Triggers
 
-* [ ] Manual launch
-* [ ] Idle launch
-* [ ] Global hotkey launch
+* [x] Manual launch (Preview Now)
+* [x] Idle launch
+* [x] Global hotkey launch (Ctrl+Shift+L)
 
 ## Exit Triggers
 
-* [ ] Mouse movement
-* [ ] Keyboard activity
+* [x] Mouse movement (when not locked)
+* [x] Keyboard activity (when not locked)
 * [ ] Password required mode
 
 ## Security
 
 * [ ] Optional unlock password
 * [ ] Password prompt screen
-* [ ] Secure settings storage
+* [x] Settings stored locally (Zustand persist)
 
 ---
 

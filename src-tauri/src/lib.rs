@@ -228,6 +228,31 @@ fn set_autostart(enable: bool) -> Result<(), String> {
     }
 }
 
+/* ── Lock Screen ────────────────────────────────────────────── */
+
+#[tauri::command]
+fn set_lock_screen(app: tauri::AppHandle, locked: bool) -> Result<(), String> {
+    let win = app.get_webview_window("clock")
+        .ok_or("clock window not found")?;
+
+    if locked {
+        win.set_always_on_top(true).map_err(|e| e.to_string())?;
+        #[cfg(target_os = "windows")]
+        unsafe {
+            use windows_sys::Win32::UI::Input::KeyboardAndMouse::BlockInput;
+            BlockInput(1);
+        }
+    } else {
+        win.set_always_on_top(false).map_err(|e| e.to_string())?;
+        #[cfg(target_os = "windows")]
+        unsafe {
+            use windows_sys::Win32::UI::Input::KeyboardAndMouse::BlockInput;
+            BlockInput(0);
+        }
+    }
+    Ok(())
+}
+
 /* ── Multi-Monitor ──────────────────────────────────────────── */
 
 #[derive(Debug, Serialize, Clone)]
@@ -292,6 +317,25 @@ fn show_clock_on_monitor(app: tauri::AppHandle, monitor_id: usize) -> Result<(),
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .setup(|app| {
+            use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
+            let shortcut: Shortcut = "Ctrl+Shift+L".parse().expect("invalid shortcut");
+            let app_handle = app.handle().clone();
+            app.global_shortcut().on_shortcut(shortcut, move |_app, _sc, event| {
+                if event.state == ShortcutState::Pressed {
+                    if let Some(win) = app_handle.get_webview_window("clock") {
+                        if win.is_visible().unwrap_or(false) {
+                            let _ = win.hide();
+                        } else {
+                            let _ = win.show();
+                            let _ = win.set_focus();
+                        }
+                    }
+                }
+            })?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_settings,
             save_settings,
@@ -303,6 +347,7 @@ pub fn run() {
             set_autostart,
             list_monitors,
             show_clock_on_monitor,
+            set_lock_screen,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

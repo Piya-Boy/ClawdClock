@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { useSettingsStore } from '../stores/settingsStore';
 
 const MOUSE_THRESHOLD_PX = 10;
 const DEBOUNCE_MS = 300;
@@ -7,9 +8,11 @@ const DEBOUNCE_MS = 300;
 export function useClockExit() {
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const lastFired = useRef(0);
+  const { lockScreenEnabled } = useSettingsStore();
 
   useEffect(() => {
     const dismiss = () => {
+      if (lockScreenEnabled) return;
       const now = Date.now();
       if (now - lastFired.current < DEBOUNCE_MS) return;
       lastFired.current = now;
@@ -34,5 +37,5 @@ export function useClockExit() {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, []);
+  }, [lockScreenEnabled]);
 }

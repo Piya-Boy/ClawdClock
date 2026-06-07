@@ -22,11 +22,13 @@ export interface SettingsState {
   timeFormat: TimeFormat;
   launchAtStartup: boolean;
   selectedMonitor: number;
+  lockScreenEnabled: boolean;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
   setLaunchAtStartup: (v: boolean) => void;
   setSelectedMonitor: (v: number) => void;
+  setLockScreenEnabled: (v: boolean) => void;
 }
 
 export interface UsageData {
