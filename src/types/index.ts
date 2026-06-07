@@ -5,7 +5,10 @@ export type ActivateAfterOption =
   | '5 minutes'
   | '10 minutes'
   | '15 minutes'
-  | '30 minutes';
+  | '30 minutes'
+  | '1 hour'
+  | '2 hours'
+  | 'Never';
 
 export type SleepAfterOption =
   | 'Never'

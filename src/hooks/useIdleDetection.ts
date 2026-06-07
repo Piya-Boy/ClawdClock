@@ -11,6 +11,9 @@ function parseActivateAfterSeconds(value: string): number {
     '10 minutes': 600,
     '15 minutes': 900,
     '30 minutes': 1800,
+    '1 hour':     3600,
+    '2 hours':    7200,
+    'Never':      Infinity,
   };
   return map[value] ?? 300;
 }

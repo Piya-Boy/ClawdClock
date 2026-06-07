@@ -4,11 +4,15 @@ import { useSettingsStore } from '../stores/settingsStore';
 import type { ActivateAfterOption, SleepAfterOption } from '../types';
 
 function secondsToActivateAfter(s: number): ActivateAfterOption {
-  if (s <= 60)  return '1 minute';
-  if (s <= 300) return '5 minutes';
-  if (s <= 600) return '10 minutes';
-  if (s <= 900) return '15 minutes';
-  return '30 minutes';
+  if (s === 0)    return 'Never';
+  if (s <= 60)   return '1 minute';
+  if (s <= 300)  return '5 minutes';
+  if (s <= 600)  return '10 minutes';
+  if (s <= 900)  return '15 minutes';
+  if (s <= 1800) return '30 minutes';
+  if (s <= 3600) return '1 hour';
+  if (s <= 7200) return '2 hours';
+  return 'Never';
 }
 
 function secondsToSleepAfter(s: number): SleepAfterOption {

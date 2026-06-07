@@ -100,7 +100,7 @@ export function SettingsApp() {
             control={
               <Dropdown
                 value={activateAfter}
-                options={['1 minute', '5 minutes', '10 minutes', '15 minutes', '30 minutes']}
+                options={['1 minute', '5 minutes', '10 minutes', '15 minutes', '30 minutes', '1 hour', '2 hours', 'Never']}
                 onChange={v => setActivateAfter(v as any)}
               />
             }
