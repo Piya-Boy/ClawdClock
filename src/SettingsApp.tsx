@@ -4,12 +4,14 @@ import { SettingRow } from './components/Settings/SettingRow';
 import { Dropdown } from './components/Settings/Dropdown';
 import { SegControl } from './components/Settings/SegControl';
 import { Toggle } from './components/Settings/Toggle';
-import { MiniClock } from './components/MiniCard/MiniClock';
-import { MiniMetric } from './components/UsagePanel/MiniMetric';
+import { ClawdClockView } from './components/ClawdClockView/ClawdClockView';
 import { useClock } from './hooks/useClock';
 import { useSettingsStore } from './stores/settingsStore';
 import { useIdleDetection } from './hooks/useIdleDetection';
 import { useMonitors } from './hooks/useMonitors';
+import { useUpdater } from './hooks/useUpdater';
+import { useUsageStore } from './stores/usageStore';
+import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
 import { THEMES, THEME_ORDER, getTheme } from './themes';
 import type { ThemeId } from './themes';
@@ -20,22 +22,38 @@ const WIN_W  = 900;
 const WIN_H  = 580;
 const FOOT_H = 56;
 const LEFT_W = 352;
+const PREVIEW_W = WIN_W - LEFT_W;
+const PREVIEW_H = WIN_H - FOOT_H - 32; // minus TitleBar
+const PREVIEW_SCALE = Math.min(PREVIEW_W / 1920, PREVIEW_H / 1080);
 const C_ACC  = '#FF6B3D';
 const FF     = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
 export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
+  useClaudeUsage();
 
-  const { activateAfter, sleepAfter, timeFormat, theme: themeId, oledMode, lockPassword, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setOledMode, setLockPassword, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
-  const previewTheme = getTheme(themeId);
+  const {
+    activateAfter, sleepAfter, timeFormat,
+    theme: themeId, oledMode, lockPassword,
+    launchAtStartup, selectedMonitor, lockScreenEnabled,
+    setActivateAfter, setSleepAfter, setTimeFormat,
+    setTheme, setOledMode, setLockPassword,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled,
+  } = useSettingsStore();
+
+  const {
+    sessionPct, weeklyPct,
+    sessionCountdown, weeklyCountdown,
+    error, lastUpdated,
+  } = useUsageStore();
+
+  const theme = getTheme(themeId);
   const monitors = useMonitors();
+  const updater = useUpdater();
 
-  const is12     = timeFormat === '12';
-  const rawH     = now.getHours();
-  const displayH = is12 ? (rawH % 12 || 12) : rawH;
-  const ampm     = rawH >= 12 ? 'PM' : 'AM';
-  const mins     = now.getMinutes();
+  const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
+  const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.healthy;
 
   return (
     <div style={{
@@ -122,7 +140,6 @@ export function SettingsApp() {
                         transition: 'all 0.12s ease',
                       }}
                     >
-                      {/* color swatch */}
                       <div style={{
                         width: 12, height: 12, borderRadius: 3, flexShrink: 0,
                         background: t.headerColor,
@@ -170,13 +187,8 @@ export function SettingsApp() {
                     'All Monitors',
                   ]}
                   onChange={v => {
-                    if (v === 'All Monitors') {
-                      setSelectedMonitor(-1);
-                      return;
-                    }
-                    const idx = monitors.findIndex(
-                      m => `${m.name}${m.is_primary ? ' (Primary)' : ''}` === v
-                    );
+                    if (v === 'All Monitors') { setSelectedMonitor(-1); return; }
+                    const idx = monitors.findIndex(m => `${m.name}${m.is_primary ? ' (Primary)' : ''}` === v);
                     if (idx >= 0) setSelectedMonitor(idx);
                   }}
                 />
@@ -221,7 +233,7 @@ export function SettingsApp() {
             />
           )}
 
-          {/* Preview Now — simple action row */}
+          {/* Preview Now */}
           <button
             className="preview-btn"
             onClick={() => {
@@ -249,43 +261,33 @@ export function SettingsApp() {
           </button>
         </div>
 
-        {/* RIGHT: Live preview — themed canvas */}
+        {/* RIGHT: Live preview — exact ClawdClockView scaled down */}
         <div style={{
           flex: 1,
-          background: previewTheme.bg,
+          background: theme.bg,
           display: 'flex',
           alignItems: 'center', justifyContent: 'center',
           position: 'relative', overflow: 'hidden',
           transition: 'background 0.2s ease',
         }}>
-          {/* Mini dashboard */}
-          <div style={{ display: 'flex', width: '86%', alignItems: 'center' }}>
-            {/* Mini clock */}
-            <div style={{ width: '38%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MiniClock hours={displayH} minutes={mins} is12={is12} ampm={ampm} theme={previewTheme} />
-            </div>
-
-            {/* Mini metrics */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, paddingLeft: 20 }}>
-              <div style={{
-                fontSize: 10, fontWeight: 900,
-                color: previewTheme.headerColor, fontFamily: FF,
-                letterSpacing: '0.05em', marginBottom: 16,
-                whiteSpace: 'nowrap',
-              }}>
-                CLAUDE CODE
-              </div>
-
-              <MiniMetric label="SESSION (5H)" pct={37} color={previewTheme.healthy} theme={previewTheme} />
-              <div style={{ height: 1, background: previewTheme.divider, margin: '12px 0' }} />
-              <MiniMetric label="WEEKLY (7D)" pct={12} color={previewTheme.accent} theme={previewTheme} />
-            </div>
-          </div>
-
-          {/* Mascot bottom-right */}
-          <div style={{ position: 'absolute', bottom: 14, right: 16 }}>
-            <img src={mascotGif} width={32} height={32}
-                 style={{ imageRendering: 'pixelated', display: 'block', opacity: 0.5 }} alt="mascot" />
+          <div style={{
+            transform: `scale(${PREVIEW_SCALE})`,
+            transformOrigin: 'center center',
+            flexShrink: 0,
+          }}>
+            <ClawdClockView
+              hours={now.getHours()}
+              minutes={now.getMinutes()}
+              theme={theme}
+              sessionPct={sessionPct}
+              weeklyPct={weeklyPct}
+              sessionCountdown={sessionCountdown}
+              weeklyCountdown={weeklyCountdown}
+              sessionColor={sessionColor}
+              weeklyColor={weeklyColor}
+              error={error}
+              lastUpdated={lastUpdated}
+            />
           </div>
         </div>
       </div>
@@ -295,35 +297,59 @@ export function SettingsApp() {
         height: FOOT_H, minHeight: FOOT_H,
         background: '#0d0d0d',
         borderTop: '1px solid rgba(255,255,255,0.04)',
-        display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 24px', gap: 8,
       }}>
-        <button
-          className="cancel-btn"
-          style={{
-            padding: '8px 22px',
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6,
-            color: '#484848', fontFamily: FF, fontSize: 12, fontWeight: 600,
-            cursor: 'pointer', letterSpacing: '0.02em',
-            transition: 'all 0.12s ease',
-          }}
-        >
-          Cancel
-        </button>
-        <button
-          className="save-btn"
-          style={{
-            padding: '8px 26px',
-            background: C_ACC,
-            border: 'none', borderRadius: 6,
-            color: '#fff', fontFamily: FF, fontSize: 12, fontWeight: 700,
-            cursor: 'pointer', letterSpacing: '0.02em',
-            transition: 'background 0.12s ease',
-          }}
-        >
-          Save
-        </button>
+        <div style={{ fontSize: 11, color: '#2a2a2a', fontFamily: FF, letterSpacing: '0.02em' }}>
+          ClawdClock v0.1.0
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {updater.error && (
+            <span style={{ fontSize: 11, color: '#555', fontFamily: FF }}>Update check failed</span>
+          )}
+          {updater.checking && (
+            <span style={{ fontSize: 11, color: '#444', fontFamily: FF }}>Checking for updates…</span>
+          )}
+          {!updater.checking && !updater.available && !updater.error && updater.lastChecked && (
+            <span style={{ fontSize: 11, color: '#2a2a2a', fontFamily: FF }}>Up to date</span>
+          )}
+          {updater.available && !updater.installing && (
+            <>
+              <span style={{ fontSize: 11, color: C_ACC, fontFamily: FF, fontWeight: 600 }}>
+                v{updater.version} available
+              </span>
+              <button
+                onClick={updater.install}
+                style={{
+                  padding: '6px 16px',
+                  background: C_ACC, border: 'none', borderRadius: 5,
+                  color: '#fff', fontFamily: FF, fontSize: 11, fontWeight: 700,
+                  cursor: 'pointer', letterSpacing: '0.02em',
+                }}
+              >
+                Update &amp; Restart
+              </button>
+            </>
+          )}
+          {updater.installing && (
+            <span style={{ fontSize: 11, color: C_ACC, fontFamily: FF, fontWeight: 600 }}>Installing…</span>
+          )}
+          {!updater.checking && (
+            <button
+              onClick={updater.check}
+              style={{
+                padding: '6px 14px',
+                background: 'transparent',
+                border: '1px solid rgba(255,255,255,0.07)', borderRadius: 5,
+                color: '#484848', fontFamily: FF, fontSize: 11, fontWeight: 600,
+                cursor: 'pointer', letterSpacing: '0.02em',
+              }}
+            >
+              Check
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
