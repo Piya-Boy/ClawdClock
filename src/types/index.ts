@@ -21,10 +21,12 @@ export interface SettingsState {
   sleepAfter: SleepAfterOption;
   timeFormat: TimeFormat;
   launchAtStartup: boolean;
+  selectedMonitor: number;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
   setLaunchAtStartup: (v: boolean) => void;
+  setSelectedMonitor: (v: number) => void;
 }
 
 export interface UsageData {
@@ -54,6 +56,16 @@ export interface ClaudeCredentials {
     accessToken: string;
     refreshToken: string;
   };
+}
+
+export interface MonitorInfo {
+  id: number;
+  name: string;
+  is_primary: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface ClaudeUsageResponse {

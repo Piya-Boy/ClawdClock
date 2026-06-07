@@ -4,6 +4,7 @@ import { UsageSection } from './components/UsagePanel/UsageSection';
 import { useClock } from './hooks/useClock';
 import { useScale } from './hooks/useScale';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
+import { useClockExit } from './hooks/useClockExit';
 import { useUsageStore } from './stores/usageStore';
 import { formatTimeAgo } from './utils/countdown';
 import './styles/globals.css';
@@ -25,6 +26,7 @@ export function App() {
   const scale = useScale(1920, 1080);
 
   useClaudeUsage();
+  useClockExit();
 
   const {
     sessionPct, weeklyPct,

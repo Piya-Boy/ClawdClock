@@ -9,6 +9,7 @@ import { MiniMetric } from './components/UsagePanel/MiniMetric';
 import { useClock } from './hooks/useClock';
 import { useSettingsStore } from './stores/settingsStore';
 import { useIdleDetection } from './hooks/useIdleDetection';
+import { useMonitors } from './hooks/useMonitors';
 import { invoke } from '@tauri-apps/api/core';
 import './styles/globals.css';
 import './styles/settings.css';
@@ -26,7 +27,8 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, launchAtStartup, setActivateAfter, setSleepAfter, setTimeFormat, setLaunchAtStartup } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, launchAtStartup, selectedMonitor, setActivateAfter, setSleepAfter, setTimeFormat, setLaunchAtStartup, setSelectedMonitor } = useSettingsStore();
+  const monitors = useMonitors();
 
   const is12     = timeFormat === '12';
   const rawH     = now.getHours();
@@ -103,11 +105,31 @@ export function SettingsApp() {
             desc="Start ClawdClock automatically when you log in."
             control={<Toggle value={launchAtStartup} onChange={setLaunchAtStartup} />}
           />
+          {monitors.length > 1 && (
+            <SettingRow
+              label="Display"
+              desc="Monitor to show ClawdClock on."
+              control={
+                <Dropdown
+                  value={monitors[selectedMonitor]
+                    ? `${monitors[selectedMonitor].name}${monitors[selectedMonitor].is_primary ? ' (Primary)' : ''}`
+                    : 'Primary'}
+                  options={monitors.map(m => `${m.name}${m.is_primary ? ' (Primary)' : ''}`)}
+                  onChange={v => {
+                    const idx = monitors.findIndex(
+                      m => `${m.name}${m.is_primary ? ' (Primary)' : ''}` === v
+                    );
+                    if (idx >= 0) setSelectedMonitor(idx);
+                  }}
+                />
+              }
+            />
+          )}
 
           {/* Preview Now — simple action row */}
           <button
             className="preview-btn"
-            onClick={() => invoke('show_clock_window').catch(() => {})}
+            onClick={() => invoke('show_clock_on_monitor', { monitorId: selectedMonitor }).catch(() => {})}
             style={{
               marginTop: 20,
               width: '100%', padding: '10px 0',

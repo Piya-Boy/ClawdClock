@@ -16,7 +16,7 @@ function parseActivateAfterSeconds(value: string): number {
 }
 
 export function useIdleDetection() {
-  const { activateAfter } = useSettingsStore();
+  const { activateAfter, selectedMonitor } = useSettingsStore();
   const clockVisible = useRef(false);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function useIdleDetection() {
         const shouldShow = idle >= thresholdSeconds;
 
         if (shouldShow && !clockVisible.current) {
-          await invoke('show_clock_window');
+          await invoke('show_clock_on_monitor', { monitorId: selectedMonitor });
           clockVisible.current = true;
         } else if (!shouldShow && clockVisible.current) {
           await invoke('hide_clock_window');
@@ -42,5 +42,5 @@ export function useIdleDetection() {
     poll();
     const id = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [activateAfter]);
+  }, [activateAfter, selectedMonitor]);
 }

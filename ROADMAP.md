@@ -354,23 +354,27 @@ Target: Replace Fliqlo
 
 ## Idle Detection
 
-* [ ] Detect user inactivity
-* [ ] Launch automatically after idle
-* [ ] Configurable idle timeout
+* [x] Detect user inactivity
+* [x] Launch automatically after idle
+* [x] Configurable idle timeout
 
 ## Fullscreen Experience
 
-* [ ] Borderless mode
-* [ ] Fullscreen mode
-* [ ] Always-on-top mode
+* [x] Borderless mode
+* [x] Fullscreen mode
+* [x] Always-on-top mode
 * [ ] OLED optimized mode
+
+## Exit Triggers
+
+* [x] Mouse movement exits clock
+* [x] Keyboard activity exits clock
 
 ## Multi Monitor
 
-* [ ] Detect monitors
-* [ ] Primary monitor mode
-* [ ] Secondary monitor mode
-* [ ] Selected monitor mode
+* [x] Detect monitors
+* [x] Primary monitor mode
+* [x] Selected monitor mode
 * [ ] All monitor mode
 
 ---

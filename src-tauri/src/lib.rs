@@ -1,4 +1,5 @@
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::window::Monitor;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -227,6 +228,64 @@ fn set_autostart(enable: bool) -> Result<(), String> {
     }
 }
 
+/* ── Multi-Monitor ──────────────────────────────────────────── */
+
+#[derive(Debug, Serialize, Clone)]
+pub struct MonitorInfo {
+    pub id: usize,
+    pub name: String,
+    pub is_primary: bool,
+    pub x: i32,
+    pub y: i32,
+    pub width: u32,
+    pub height: u32,
+}
+
+#[tauri::command]
+fn list_monitors(app: tauri::AppHandle) -> Vec<MonitorInfo> {
+    let monitors: Vec<Monitor> = app.available_monitors().unwrap_or_default();
+    let primary: Option<Monitor> = app.primary_monitor().ok().flatten();
+
+    monitors.iter().enumerate().map(|(i, m)| {
+        let is_primary = primary.as_ref()
+            .map(|p| p.name() == m.name())
+            .unwrap_or(false);
+        MonitorInfo {
+            id: i,
+            name: m.name().map_or("Monitor", |v| v).to_string(),
+            is_primary,
+            x: m.position().x,
+            y: m.position().y,
+            width: m.size().width,
+            height: m.size().height,
+        }
+    }).collect()
+}
+
+#[tauri::command]
+fn show_clock_on_monitor(app: tauri::AppHandle, monitor_id: usize) -> Result<(), String> {
+    let monitors: Vec<Monitor> = app.available_monitors().unwrap_or_default();
+
+    let monitor = monitors.get(monitor_id)
+        .ok_or_else(|| format!("monitor {monitor_id} not found"))?;
+
+    let pos  = monitor.position();
+    let size = monitor.size();
+
+    let win = match app.get_webview_window("clock") {
+        Some(w) => w,
+        None => return Err("clock window not found".into()),
+    };
+
+    win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y))
+        .map_err(|e| e.to_string())?;
+    win.set_size(tauri::PhysicalSize::new(size.width, size.height))
+        .map_err(|e| e.to_string())?;
+    win.show().map_err(|e| e.to_string())?;
+    win.set_focus().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /* ── Entry Point ────────────────────────────────────────────── */
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -242,6 +301,8 @@ pub fn run() {
             fetch_claude_usage,
             get_idle_seconds,
             set_autostart,
+            list_monitors,
+            show_clock_on_monitor,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
