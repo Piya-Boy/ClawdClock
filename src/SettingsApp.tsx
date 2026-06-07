@@ -16,9 +16,6 @@ import { useTrayTooltip } from './hooks/useTrayTooltip';
 import { useHotkey } from './hooks/useHotkey';
 import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useChangelog } from './hooks/useChangelog';
-import { useGitHubContributions } from './hooks/useGitHubContributions';
-import { useCIStatus } from './hooks/useCIStatus';
-import { useOpenAIUsage } from './hooks/useOpenAIUsage';
 import { ChangelogPanel } from './components/Settings/ChangelogPanel';
 import { useAchievements } from './hooks/useAchievements';
 import { AchievementToast } from './components/Achievements/AchievementToast';
@@ -59,10 +56,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, updateChannel, githubUsername, githubRepo, openaiApiKey, clockHotkey,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, updateChannel, clockHotkey,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setUpdateChannel, setGithubUsername, setGithubRepo, setOpenaiApiKey, setClockHotkey,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setUpdateChannel, setClockHotkey,
   } = useSettingsStore();
 
   const {
@@ -75,9 +72,6 @@ export function SettingsApp() {
   const monitors = useMonitors();
   const updater = useUpdater();
   const ollama = useOllamaStatus();
-  const github = useGitHubContributions(githubUsername || null);
-  const ci = useCIStatus(githubRepo || null);
-  const openai = useOpenAIUsage(openaiApiKey || null);
 
   useTrayTooltip(sessionPct, weeklyPct);
   useHotkey();
@@ -88,7 +82,7 @@ export function SettingsApp() {
     weeklyPct,
     lockScreenEnabled,
     oledMode,
-    githubUsername,
+    githubUsername: '',
     ollamaActive: ollama.available && ollama.running.length > 0,
     themeChanged: themeId !== 'classic',
   });
@@ -330,67 +324,6 @@ export function SettingsApp() {
             desc="Check for updates automatically."
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
           />
-          <SettingRow
-            label="OpenAI API Key"
-            desc="Show today's token usage on the clock."
-            control={
-              <input
-                type="password"
-                value={openaiApiKey}
-                onChange={e => setOpenaiApiKey(e.target.value)}
-                placeholder="sk-…"
-                autoComplete="off"
-                style={{
-                  width: 160, padding: '7px 10px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 6, outline: 'none',
-                  color: '#ccc', fontFamily: FF, fontSize: 13,
-                  letterSpacing: '0.06em',
-                }}
-              />
-            }
-          />
-          <SettingRow
-            label="GitHub Repo"
-            desc="Show CI/CD status (owner/repo)."
-            control={
-              <input
-                type="text"
-                value={githubRepo}
-                onChange={e => setGithubRepo(e.target.value)}
-                placeholder="owner/repo"
-                autoComplete="off"
-                style={{
-                  width: 160, padding: '7px 10px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 6, outline: 'none',
-                  color: '#ccc', fontFamily: FF, fontSize: 13,
-                }}
-              />
-            }
-          />
-          <SettingRow
-            label="GitHub Username"
-            desc="Show contribution heatmap on the clock display."
-            control={
-              <input
-                type="text"
-                value={githubUsername}
-                onChange={e => setGithubUsername(e.target.value)}
-                placeholder="your-username"
-                autoComplete="off"
-                style={{
-                  width: 160, padding: '7px 10px',
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: 6, outline: 'none',
-                  color: '#ccc', fontFamily: FF, fontSize: 13,
-                }}
-              />
-            }
-          />
 
           {autoUpdate && (
             <>
@@ -476,10 +409,6 @@ export function SettingsApp() {
               lastUpdated={lastUpdated}
               ollamaAvailable={ollama.available}
               ollamaRunning={ollama.running}
-              githubUsername={githubUsername}
-              githubDays={github.days}
-              ciStatus={ci}
-              openaiUsage={openai}
             />
           </div>
         </div>

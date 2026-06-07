@@ -38,9 +38,6 @@ export interface SettingsState {
   autoUpdate: boolean;
   checkFrequency: CheckFrequencyOption;
   updateChannel: UpdateChannel;
-  githubUsername: string;
-  githubRepo: string;
-  openaiApiKey: string;
   clockHotkey: string;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
@@ -55,9 +52,6 @@ export interface SettingsState {
   setAutoUpdate: (v: boolean) => void;
   setCheckFrequency: (v: CheckFrequencyOption) => void;
   setUpdateChannel: (v: UpdateChannel) => void;
-  setGithubUsername: (v: string) => void;
-  setGithubRepo: (v: string) => void;
-  setOpenaiApiKey: (v: string) => void;
   setClockHotkey: (v: string) => void;
 }
 
