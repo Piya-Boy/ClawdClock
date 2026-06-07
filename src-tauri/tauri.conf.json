@@ -50,8 +50,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "nsis": {
-      "installerHooks": "nsis/installer-hooks.nsi"
+    "windows": {
+      "nsis": {
+        "installerHooks": "nsis/installer-hooks.nsi"
+      }
     }
   }
 }
