@@ -1,13 +1,24 @@
 import { useRef, useEffect } from 'react';
 
 const MASCOT_SIZE = 160;
-const SPEED = 1.8;
 
-export function useBouncingMascot() {
+export function useBouncingMascot(speed: number = 1.8) {
   const ref = useRef<HTMLDivElement>(null);
   const pos = useRef({ x: 80, y: 20 });
-  const vel = useRef({ x: SPEED, y: SPEED * 0.7 });
+  const vel = useRef({ x: speed, y: speed * 0.7 });
   const raf = useRef<number>(0);
+  const speedRef = useRef(speed);
+
+  // Update speed reactively without resetting position
+  useEffect(() => {
+    const prev = speedRef.current;
+    if (prev === speed) return;
+    const ratio = speed / prev;
+    vel.current.x *= ratio;
+    vel.current.y *= ratio;
+    // clamp direction sign preserved
+    speedRef.current = speed;
+  }, [speed]);
 
   useEffect(() => {
     const tick = () => {
@@ -29,6 +40,10 @@ export function useBouncingMascot() {
       el.style.transform = `translate(${p.x}px, ${p.y}px)`;
       raf.current = requestAnimationFrame(tick);
     };
+
+    // Init velocity from current speed
+    const s = speedRef.current;
+    vel.current = { x: s, y: s * 0.7 };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, []);
