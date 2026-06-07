@@ -8,19 +8,10 @@ import { useClockExit } from './hooks/useClockExit';
 import { useUsageStore } from './stores/usageStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { formatTimeAgo } from './utils/countdown';
+import { getTheme } from './themes';
 import './styles/globals.css';
 
-const C_ORANGE   = '#FF6B3D';
-const C_GREEN    = '#66CC44';
-const C_YELLOW   = '#FFB800';
-const C_RED      = '#FF4444';
-const FF         = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
-
-function usageColor(pct: number): string {
-  if (pct >= 90) return C_RED;
-  if (pct >= 70) return C_YELLOW;
-  return C_GREEN;
-}
+const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
 export function App() {
   const now   = useClock();
@@ -29,20 +20,22 @@ export function App() {
   useClaudeUsage();
   useClockExit();
 
-  const { lockScreenEnabled } = useSettingsStore();
+  const { lockScreenEnabled, theme: themeId } = useSettingsStore();
+  const theme = getTheme(themeId);
+
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
     error, lastUpdated,
   } = useUsageStore();
 
-  const sessionColor = usageColor(sessionPct);
-  const weeklyColor  = usageColor(weeklyPct);
+  const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
+  const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.healthy;
 
   return (
     <div style={{
       position: 'fixed', inset: 0,
-      background: '#000',
+      background: theme.bg,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <BouncingMascot />
@@ -55,11 +48,11 @@ export function App() {
           display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
-            <rect x="2" y="7" width="10" height="8" rx="2" fill="#2a2a2a"/>
-            <path d="M4 7V5a3 3 0 016 0v2" stroke="#2a2a2a" strokeWidth="2" strokeLinecap="round"/>
+            <rect x="2" y="7" width="10" height="8" rx="2" fill={theme.offlineColor}/>
+            <path d="M4 7V5a3 3 0 016 0v2" stroke={theme.offlineColor} strokeWidth="2" strokeLinecap="round"/>
           </svg>
           <span style={{
-            fontSize: 11, fontWeight: 600, color: '#2a2a2a',
+            fontSize: 11, fontWeight: 600, color: theme.offlineColor,
             fontFamily: FF, letterSpacing: '0.12em',
           }}>
             LOCKED
@@ -72,7 +65,7 @@ export function App() {
         width: 1920, height: 1080,
         transform: `scale(${scale})`,
         transformOrigin: 'center center',
-        background: '#000000',
+        background: theme.bg,
         display: 'flex',
         flexShrink: 0,
       }}>
@@ -84,7 +77,7 @@ export function App() {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <FlipClock hours={now.getHours()} minutes={now.getMinutes()} />
+          <FlipClock hours={now.getHours()} minutes={now.getMinutes()} theme={theme} />
         </div>
 
         {/* RIGHT 60% — Dashboard */}
@@ -108,7 +101,7 @@ export function App() {
           }}>
             <div style={{
               fontSize: 62, fontWeight: 900, lineHeight: 1,
-              color: C_ORANGE,
+              color: theme.headerColor,
               fontFamily: FF,
               letterSpacing: '0.055em',
               whiteSpace: 'nowrap',
@@ -120,7 +113,7 @@ export function App() {
             {(lastUpdated || error) && (
               <div style={{
                 fontSize: 22, fontWeight: 600,
-                color: error ? '#FF4444' : '#2a2a2a',
+                color: error ? theme.critical : theme.offlineColor,
                 fontFamily: FF,
                 letterSpacing: '0.08em',
                 alignSelf: 'flex-end',
@@ -136,11 +129,12 @@ export function App() {
             pct={sessionPct}
             color={sessionColor}
             resetIn={sessionCountdown}
+            theme={theme}
           />
 
           <div style={{
             height: 1,
-            background: '#1c1c1c',
+            background: theme.divider,
             margin: '70px 0',
           }} />
 
@@ -149,6 +143,7 @@ export function App() {
             pct={weeklyPct}
             color={weeklyColor}
             resetIn={weeklyCountdown}
+            theme={theme}
           />
 
         </div>

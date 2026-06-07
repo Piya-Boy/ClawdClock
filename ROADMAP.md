@@ -315,7 +315,7 @@ Then generate code.
 
 * [x] Activate After (Idle Timeout)
 * [x] Preview Now
-* [ ] Fullscreen Preview
+* [x] Fullscreen Preview
 
 ### Time
 
@@ -330,19 +330,19 @@ Then generate code.
 
 ### Lock Screen
 
-* [ ] Enable Lock Screen Mode
-* [ ] Exit on Mouse Movement
-* [ ] Exit on Keyboard Activity
+* [x] Enable Lock Screen Mode
+* [x] Exit on Mouse Movement
+* [x] Exit on Keyboard Activity
 * [ ] Password Required Mode
 
 ## Local Storage
 
-* [ ] Save settings
-* [ ] Load settings on startup
+* [x] Save settings
+* [x] Load settings on startup
 
 ## Platform Support
 
-* [ ] Windows
+* [x] Windows
 * [ ] macOS
 * [ ] Linux
 
@@ -387,7 +387,7 @@ Target: Developer Ambient Lock Screen
 
 * [x] Fullscreen lock mode
 * [x] Borderless lock mode
-* [ ] Hide taskbar
+* [ ] Hide taskbar (future)
 * [x] Focused window mode
 * [x] Lock indicator UI
 
@@ -436,11 +436,11 @@ Target: Personalization
 
 ## Themes
 
-* [ ] Classic ClawdClock
-* [ ] OLED Black
-* [ ] Fliqlo Classic
-* [ ] Terminal Green
-* [ ] Retro Amber
+* [x] Classic ClawdClock
+* [x] OLED Black
+* [x] Fliqlo Classic
+* [x] Terminal Green
+* [x] Retro Amber
 
 ## Layouts
 

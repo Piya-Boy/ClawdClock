@@ -1,4 +1,5 @@
 import { ProgressBar } from '../ProgressBar/ProgressBar';
+import type { Theme } from '../../themes';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -7,15 +8,16 @@ interface Props {
   pct: number;
   color: string;
   resetIn: string;
+  theme: Theme;
 }
 
-export function UsageSection({ label, pct, color, resetIn }: Props) {
+export function UsageSection({ label, pct, color, resetIn, theme }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{
         fontSize: 14, fontWeight: 700,
         letterSpacing: '0.18em',
-        color: '#4e4e4e',
+        color: theme.labelColor,
         fontFamily: FF,
       }}>
         {label}
@@ -43,7 +45,7 @@ export function UsageSection({ label, pct, color, resetIn }: Props) {
       <div style={{
         fontSize: 13, fontWeight: 600,
         letterSpacing: '0.15em',
-        color: '#383838',
+        color: theme.resetColor,
         fontFamily: FF,
       }}>
         RESETS IN {resetIn}

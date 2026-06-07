@@ -1,34 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
+import type { Theme } from '../../themes';
 
 const CW = 310;
 const CH = 388;
 const HH = CH / 2;
 const FS = 350;
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
-const C_CARD_TOP = '#121212';
-const C_CARD_BOT = '#0b0b0b';
-const C_FOLD = '#000000';
-
-const topNumStyle: React.CSSProperties = {
-  position: 'absolute', top: 0, left: 0,
-  width: CW, height: CH,
-  fontSize: FS, lineHeight: `${CH}px`,
-  fontFamily: FF, fontWeight: 900,
-  color: '#ffffff', textAlign: 'center',
-  userSelect: 'none', letterSpacing: '-0.015em',
-};
-
-const botNumStyle: React.CSSProperties = {
-  ...topNumStyle,
-  top: -HH,
-  color: '#c0c0c0',
-};
 
 interface Props {
   value: string;
+  theme: Theme;
 }
 
-export function FlipDigit({ value }: Props) {
+export function FlipDigit({ value, theme }: Props) {
+  const C_CARD_TOP = theme.cardTop;
+  const C_CARD_BOT = theme.cardBot;
+  const C_FOLD     = theme.fold;
+
+  const topNumStyle: React.CSSProperties = {
+    position: 'absolute', top: 0, left: 0,
+    width: CW, height: CH,
+    fontSize: FS, lineHeight: `${CH}px`,
+    fontFamily: FF, fontWeight: 900,
+    color: theme.digitColor, textAlign: 'center',
+    userSelect: 'none', letterSpacing: '-0.015em',
+  };
+
+  const botNumStyle: React.CSSProperties = {
+    ...topNumStyle,
+    top: -HH,
+    color: theme.digitColorBot,
+  };
   const prevRef  = useRef(value);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [st, setSt] = useState({ curr: value, prev: value, flip: false });

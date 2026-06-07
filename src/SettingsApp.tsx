@@ -11,6 +11,8 @@ import { useSettingsStore } from './stores/settingsStore';
 import { useIdleDetection } from './hooks/useIdleDetection';
 import { useMonitors } from './hooks/useMonitors';
 import { invoke } from '@tauri-apps/api/core';
+import { THEMES, THEME_ORDER, getTheme } from './themes';
+import type { ThemeId } from './themes';
 import './styles/globals.css';
 import './styles/settings.css';
 
@@ -18,16 +20,15 @@ const WIN_W  = 900;
 const WIN_H  = 580;
 const FOOT_H = 56;
 const LEFT_W = 352;
-const C_ACC   = '#FF6B3D';
-const C_GREEN = '#66CC44';
-const C_BLUE  = '#2D7DFF';
-const FF      = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
+const C_ACC  = '#FF6B3D';
+const FF     = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
 export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, theme: themeId, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
+  const previewTheme = getTheme(themeId);
   const monitors = useMonitors();
 
   const is12     = timeFormat === '12';
@@ -101,6 +102,47 @@ export function SettingsApp() {
             }
           />
           <SettingRow
+            label="Theme"
+            desc="Visual style for the clock display."
+            control={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: 172 }}>
+                {THEME_ORDER.map(id => {
+                  const t = THEMES[id];
+                  const active = id === themeId;
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => setTheme(id as ThemeId)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '6px 10px',
+                        background: active ? 'rgba(255,107,61,0.12)' : 'transparent',
+                        border: `1px solid ${active ? 'rgba(255,107,61,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                        borderRadius: 6, cursor: 'pointer',
+                        transition: 'all 0.12s ease',
+                      }}
+                    >
+                      {/* color swatch */}
+                      <div style={{
+                        width: 12, height: 12, borderRadius: 3, flexShrink: 0,
+                        background: t.headerColor,
+                        boxShadow: `0 0 0 1px rgba(0,0,0,0.4)`,
+                      }} />
+                      <span style={{
+                        fontSize: 11, fontWeight: active ? 700 : 500,
+                        color: active ? '#e0e0e0' : '#555',
+                        fontFamily: FF, letterSpacing: '0.01em',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {t.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            }
+          />
+          <SettingRow
             label="Launch at Startup"
             desc="Start ClawdClock automatically when you log in."
             control={<Toggle value={launchAtStartup} onChange={setLaunchAtStartup} />}
@@ -162,35 +204,36 @@ export function SettingsApp() {
           </button>
         </div>
 
-        {/* RIGHT: Live preview — pure black canvas */}
+        {/* RIGHT: Live preview — themed canvas */}
         <div style={{
           flex: 1,
-          background: '#000',
+          background: previewTheme.bg,
           display: 'flex',
           alignItems: 'center', justifyContent: 'center',
           position: 'relative', overflow: 'hidden',
+          transition: 'background 0.2s ease',
         }}>
           {/* Mini dashboard */}
           <div style={{ display: 'flex', width: '86%', alignItems: 'center' }}>
             {/* Mini clock */}
             <div style={{ width: '38%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <MiniClock hours={displayH} minutes={mins} is12={is12} ampm={ampm} />
+              <MiniClock hours={displayH} minutes={mins} is12={is12} ampm={ampm} theme={previewTheme} />
             </div>
 
             {/* Mini metrics */}
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0, paddingLeft: 20 }}>
               <div style={{
                 fontSize: 10, fontWeight: 900,
-                color: C_ACC, fontFamily: FF,
+                color: previewTheme.headerColor, fontFamily: FF,
                 letterSpacing: '0.05em', marginBottom: 16,
                 whiteSpace: 'nowrap',
               }}>
                 CLAUDE CODE
               </div>
 
-              <MiniMetric label="SESSION (5H)" pct={37} color={C_GREEN} />
-              <div style={{ height: 1, background: '#111', margin: '12px 0' }} />
-              <MiniMetric label="WEEKLY (7D)" pct={12} color={C_BLUE} />
+              <MiniMetric label="SESSION (5H)" pct={37} color={previewTheme.healthy} theme={previewTheme} />
+              <div style={{ height: 1, background: previewTheme.divider, margin: '12px 0' }} />
+              <MiniMetric label="WEEKLY (7D)" pct={12} color={previewTheme.accent} theme={previewTheme} />
             </div>
           </div>
 
