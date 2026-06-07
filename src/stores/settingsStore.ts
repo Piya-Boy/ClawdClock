@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
 import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat } from '../types';
-import type { ThemeId, LayoutId } from '../themes';
+import type { ThemeId } from '../themes';
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -11,7 +11,6 @@ export const useSettingsStore = create<SettingsState>()(
       sleepAfter: 'Never',
       timeFormat: '24',
       theme: 'classic' as ThemeId,
-      layout: 'horizontal' as LayoutId,
       oledMode: false,
       lockPassword: '',
       launchAtStartup: false,
@@ -21,7 +20,6 @@ export const useSettingsStore = create<SettingsState>()(
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
       setTheme: (v: ThemeId) => set({ theme: v }),
-      setLayout: (v: LayoutId) => set({ layout: v }),
       setOledMode: (v: boolean) => set({ oledMode: v }),
       setLockPassword: (v: string) => set({ lockPassword: v }),
       setLaunchAtStartup: (v: boolean) => {

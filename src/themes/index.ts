@@ -5,25 +5,6 @@ export type ThemeId =
   | 'terminal'
   | 'amber';
 
-export type LayoutId =
-  | 'horizontal'
-  | 'vertical'
-  | 'compact'
-  | 'minimal'
-  | 'ultra';
-
-export interface LayoutInfo {
-  id: LayoutId;
-  name: string;
-}
-
-export const LAYOUTS: LayoutInfo[] = [
-  { id: 'horizontal',  name: 'Horizontal' },
-  { id: 'vertical',    name: 'Vertical'   },
-  { id: 'compact',     name: 'Compact'    },
-  { id: 'minimal',     name: 'Minimal'    },
-  { id: 'ultra',       name: 'Ultra Minimal' },
-];
 
 export interface Theme {
   id: ThemeId;

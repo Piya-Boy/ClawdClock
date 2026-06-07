@@ -11,8 +11,8 @@ import { useSettingsStore } from './stores/settingsStore';
 import { useIdleDetection } from './hooks/useIdleDetection';
 import { useMonitors } from './hooks/useMonitors';
 import { invoke } from '@tauri-apps/api/core';
-import { THEMES, THEME_ORDER, LAYOUTS, getTheme } from './themes';
-import type { ThemeId, LayoutId } from './themes';
+import { THEMES, THEME_ORDER, getTheme } from './themes';
+import type { ThemeId } from './themes';
 import './styles/globals.css';
 import './styles/settings.css';
 
@@ -27,7 +27,7 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, theme: themeId, layout, oledMode, lockPassword, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setLayout, setOledMode, setLockPassword, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, theme: themeId, oledMode, lockPassword, launchAtStartup, selectedMonitor, lockScreenEnabled, setActivateAfter, setSleepAfter, setTimeFormat, setTheme, setOledMode, setLockPassword, setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled } = useSettingsStore();
   const previewTheme = getTheme(themeId);
   const monitors = useMonitors();
 
@@ -135,39 +135,6 @@ export function SettingsApp() {
                         whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                       }}>
                         {t.name}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            }
-          />
-          <SettingRow
-            label="Layout"
-            desc="How the clock is arranged on screen."
-            control={
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 172 }}>
-                {LAYOUTS.map(l => {
-                  const active = l.id === layout;
-                  return (
-                    <button
-                      key={l.id}
-                      onClick={() => setLayout(l.id as LayoutId)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '6px 10px',
-                        background: active ? 'rgba(255,107,61,0.12)' : 'transparent',
-                        border: `1px solid ${active ? 'rgba(255,107,61,0.4)' : 'rgba(255,255,255,0.07)'}`,
-                        borderRadius: 6, cursor: 'pointer',
-                        transition: 'all 0.12s ease',
-                      }}
-                    >
-                      <span style={{
-                        fontSize: 11, fontWeight: active ? 700 : 500,
-                        color: active ? '#e0e0e0' : '#555',
-                        fontFamily: FF, letterSpacing: '0.01em',
-                      }}>
-                        {l.name}
                       </span>
                     </button>
                   );

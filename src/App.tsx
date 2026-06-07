@@ -11,7 +11,6 @@ import { useUsageStore } from './stores/usageStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { formatTimeAgo } from './utils/countdown';
 import { getTheme } from './themes';
-import type { LayoutId } from './themes';
 import { useOledShift } from './hooks/useOledShift';
 import './styles/globals.css';
 
@@ -19,100 +18,6 @@ const IS_DEV = import.meta.env.DEV;
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
-interface LayoutProps {
-  layout: LayoutId;
-  now: Date;
-  theme: ReturnType<typeof getTheme>;
-  sessionPct: number; weeklyPct: number;
-  sessionColor: string; weeklyColor: string;
-  sessionCountdown: string; weeklyCountdown: string;
-  error: string | null; lastUpdated: Date | null;
-  FF: string;
-}
-
-function DashPanel({ theme, sessionPct, weeklyPct, sessionColor, weeklyColor, sessionCountdown, weeklyCountdown, error, lastUpdated, FF, compact }: Omit<LayoutProps, 'layout' | 'now'> & { compact?: boolean }) {
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      paddingLeft: compact ? 60 : 112,
-      paddingRight: compact ? 60 : 140,
-      paddingTop: compact ? 40 : 80,
-      paddingBottom: compact ? 40 : 80,
-      flex: 1, height: '100%',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: compact ? 48 : 92 }}>
-        <div style={{ fontSize: compact ? 36 : 62, fontWeight: 900, lineHeight: 1, color: theme.headerColor, fontFamily: FF, letterSpacing: '0.055em', whiteSpace: 'nowrap' }}>
-          CLAUDE CODE
-        </div>
-        {(lastUpdated || error) && (
-          <div style={{ fontSize: compact ? 14 : 22, fontWeight: 600, color: error ? theme.critical : theme.offlineColor, fontFamily: FF, letterSpacing: '0.08em', alignSelf: 'flex-end', marginBottom: 4 }}>
-            {error ? 'OFFLINE' : lastUpdated ? `UPDATED ${formatTimeAgo(lastUpdated).toUpperCase()}` : ''}
-          </div>
-        )}
-      </div>
-      <UsageSection label="SESSION (5H)" pct={sessionPct} color={sessionColor} resetIn={sessionCountdown} theme={theme} />
-      <div style={{ height: 1, background: theme.divider, margin: `${compact ? 40 : 70}px 0` }} />
-      <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} theme={theme} />
-    </div>
-  );
-}
-
-function renderLayout(p: LayoutProps) {
-  const clock = <FlipClock hours={p.now.getHours()} minutes={p.now.getMinutes()} theme={p.theme} />;
-
-  if (p.layout === 'ultra') {
-    return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <FlipClock hours={p.now.getHours()} minutes={p.now.getMinutes()} theme={p.theme} />
-      </div>
-    );
-  }
-
-  if (p.layout === 'minimal') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 60 }}>
-        {clock}
-        <div style={{ fontSize: 18, fontWeight: 700, color: p.theme.labelColor, fontFamily: p.FF, letterSpacing: '0.18em' }}>
-          CLAUDE CODE
-        </div>
-      </div>
-    );
-  }
-
-  if (p.layout === 'vertical') {
-    return (
-      <>
-        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 120 }}>{clock}</div>
-        <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 80, paddingTop: 60 }}>
-          <div style={{ width: 900, display: 'flex', flexDirection: 'column' }}>
-            <DashPanel {...p} compact />
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  if (p.layout === 'compact') {
-    return (
-      <>
-        <div style={{ flex: 1, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {clock}
-        </div>
-        <DashPanel {...p} compact />
-      </>
-    );
-  }
-
-  // horizontal (default)
-  return (
-    <>
-      <div style={{ width: '40%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {clock}
-      </div>
-      <DashPanel {...p} />
-    </>
-  );
-}
 
 export function App() {
   const now   = useClock();
@@ -121,7 +26,7 @@ export function App() {
   useClaudeUsage();
   useClockExit();
 
-  const { lockScreenEnabled, theme: themeId, layout, oledMode } = useSettingsStore();
+  const { lockScreenEnabled, theme: themeId, oledMode } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
   const escapeBar = useEscapeBar();
   const theme = getTheme(themeId);
@@ -164,11 +69,32 @@ export function App() {
         background: theme.bg,
         display: 'flex',
         flexShrink: 0,
-        alignItems: layout === 'vertical' ? 'center' : undefined,
-        justifyContent: layout === 'minimal' || layout === 'ultra' || layout === 'vertical' ? 'center' : undefined,
-        flexDirection: layout === 'vertical' ? 'column' : 'row',
+        flexDirection: 'row',
       }}>
-        {renderLayout({ layout, now, theme, sessionPct, weeklyPct, sessionColor, weeklyColor, sessionCountdown, weeklyCountdown, error, lastUpdated, FF })}
+        <>
+          <div style={{ width: '40%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FlipClock hours={now.getHours()} minutes={now.getMinutes()} theme={theme} />
+          </div>
+          <div style={{
+            flex: 1, height: '100%',
+            display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            paddingLeft: 112, paddingRight: 140, paddingTop: 80, paddingBottom: 80,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 92 }}>
+              <div style={{ fontSize: 62, fontWeight: 900, lineHeight: 1, color: theme.headerColor, fontFamily: FF, letterSpacing: '0.055em', whiteSpace: 'nowrap' }}>
+                CLAUDE CODE
+              </div>
+              {(lastUpdated || error) && (
+                <div style={{ fontSize: 22, fontWeight: 600, color: error ? theme.critical : theme.offlineColor, fontFamily: FF, letterSpacing: '0.08em', alignSelf: 'flex-end', marginBottom: 4 }}>
+                  {error ? 'OFFLINE' : lastUpdated ? `UPDATED ${formatTimeAgo(lastUpdated).toUpperCase()}` : ''}
+                </div>
+              )}
+            </div>
+            <UsageSection label="SESSION (5H)" pct={sessionPct} color={sessionColor} resetIn={sessionCountdown} theme={theme} />
+            <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
+            <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} theme={theme} />
+          </div>
+        </>
       </div>
     </div>
   );
