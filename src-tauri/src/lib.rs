@@ -1,5 +1,12 @@
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri::window::Monitor;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ScrMode {
+    Screensaver,
+    Preview(u64),
+    Config,
+}
 use serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -311,29 +318,74 @@ fn show_clock_on_monitor(app: tauri::AppHandle, monitor_id: usize) -> Result<(),
     Ok(())
 }
 
+/* ── Registry / Screensaver ─────────────────────────────────── */
+
+#[tauri::command]
+fn register_screensaver() -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let exe_str = exe.to_string_lossy().to_string();
+        std::process::Command::new("reg")
+            .args(["add", r"HKCU\Control Panel\Desktop",
+                   "/v", "SCRNSAVE.EXE", "/t", "REG_SZ", "/d", &exe_str, "/f"])
+            .output()
+            .map_err(|e| e.to_string())?;
+        std::process::Command::new("reg")
+            .args(["add", r"HKCU\Control Panel\Desktop",
+                   "/v", "ScreenSaveActive", "/t", "REG_SZ", "/d", "1", "/f"])
+            .output()
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /* ── Entry Point ────────────────────────────────────────────── */
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    run_with_mode(ScrMode::Config);
+}
+
+pub fn run_with_mode(mode: ScrMode) {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .setup(|app| {
-            use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
-            let shortcut: Shortcut = "Ctrl+Shift+L".parse().expect("invalid shortcut");
-            let app_handle = app.handle().clone();
-            app.global_shortcut().on_shortcut(shortcut, move |_app, _sc, event| {
-                if event.state == ShortcutState::Pressed {
-                    if let Some(win) = app_handle.get_webview_window("clock") {
-                        if win.is_visible().unwrap_or(false) {
-                            let _ = win.hide();
-                        } else {
-                            let _ = win.show();
-                            let _ = win.set_focus();
+        .setup(move |app| {
+            // Global hotkey only when not in screensaver/preview mode
+            if mode == ScrMode::Config {
+                use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
+                let shortcut: Shortcut = "Ctrl+Shift+L".parse().expect("invalid shortcut");
+                let app_handle = app.handle().clone();
+                app.global_shortcut().on_shortcut(shortcut, move |_app, _sc, event| {
+                    if event.state == ShortcutState::Pressed {
+                        if let Some(win) = app_handle.get_webview_window("clock") {
+                            if win.is_visible().unwrap_or(false) {
+                                let _ = win.hide();
+                            } else {
+                                let _ = win.show();
+                                let _ = win.set_focus();
+                            }
                         }
                     }
+                })?;
+            }
+
+            // Screensaver mode: show clock immediately on primary monitor
+            if mode == ScrMode::Screensaver {
+                if let Some(win) = app.get_webview_window("clock") {
+                    // Position on primary monitor
+                    if let Ok(Some(primary)) = app.primary_monitor() {
+                        let pos  = primary.position();
+                        let size = primary.size();
+                        let _ = win.set_position(tauri::PhysicalPosition::new(pos.x, pos.y));
+                        let _ = win.set_size(tauri::PhysicalSize::new(size.width, size.height));
+                    }
+                    let _ = win.show();
+                    let _ = win.set_focus();
                 }
-            })?;
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -348,6 +400,7 @@ pub fn run() {
             list_monitors,
             show_clock_on_monitor,
             set_lock_screen,
+            register_screensaver,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

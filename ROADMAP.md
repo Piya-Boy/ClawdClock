@@ -417,15 +417,15 @@ Target: Native Windows Integration
 
 ## SCR Support
 
-* [ ] Build .scr executable
-* [ ] Preview mode
-* [ ] Configuration mode
-* [ ] Fullscreen screensaver mode
+* [x] Build .scr executable
+* [ ] Preview mode (SetParent HWND embed — future)
+* [x] Configuration mode
+* [x] Fullscreen screensaver mode
 
 ## Windows Integration
 
-* [ ] Register as screensaver
-* [ ] Screen Saver Settings integration
+* [x] Register as screensaver
+* [x] Screen Saver Settings integration
 * [ ] Windows installer integration
 
 ---
