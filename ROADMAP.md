@@ -314,7 +314,7 @@ Then generate code.
 ### Display
 
 * [x] Activate After (Idle Timeout)
-* [ ] Preview Now
+* [x] Preview Now
 * [ ] Fullscreen Preview
 
 ### Time
@@ -326,7 +326,7 @@ Then generate code.
 ### Power
 
 * [x] Computer Sleep
-* [ ] Launch at Startup
+* [x] Launch at Startup (Windows)
 
 ### Lock Screen
 

@@ -3,10 +3,13 @@ import { TitleBar } from './components/Settings/TitleBar';
 import { SettingRow } from './components/Settings/SettingRow';
 import { Dropdown } from './components/Settings/Dropdown';
 import { SegControl } from './components/Settings/SegControl';
+import { Toggle } from './components/Settings/Toggle';
 import { MiniClock } from './components/MiniCard/MiniClock';
 import { MiniMetric } from './components/UsagePanel/MiniMetric';
 import { useClock } from './hooks/useClock';
 import { useSettingsStore } from './stores/settingsStore';
+import { useIdleDetection } from './hooks/useIdleDetection';
+import { invoke } from '@tauri-apps/api/core';
 import './styles/globals.css';
 import './styles/settings.css';
 
@@ -21,8 +24,9 @@ const FF      = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
 export function SettingsApp() {
   const now = useClock();
+  useIdleDetection();
 
-  const { activateAfter, sleepAfter, timeFormat, setActivateAfter, setSleepAfter, setTimeFormat } = useSettingsStore();
+  const { activateAfter, sleepAfter, timeFormat, launchAtStartup, setActivateAfter, setSleepAfter, setTimeFormat, setLaunchAtStartup } = useSettingsStore();
 
   const is12     = timeFormat === '12';
   const rawH     = now.getHours();
@@ -94,10 +98,16 @@ export function SettingsApp() {
               />
             }
           />
+          <SettingRow
+            label="Launch at Startup"
+            desc="Start ClawdClock automatically when you log in."
+            control={<Toggle value={launchAtStartup} onChange={setLaunchAtStartup} />}
+          />
 
           {/* Preview Now — simple action row */}
           <button
             className="preview-btn"
+            onClick={() => invoke('show_clock_window').catch(() => {})}
             style={{
               marginTop: 20,
               width: '100%', padding: '10px 0',

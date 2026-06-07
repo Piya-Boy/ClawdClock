@@ -20,9 +20,11 @@ export interface SettingsState {
   activateAfter: ActivateAfterOption;
   sleepAfter: SleepAfterOption;
   timeFormat: TimeFormat;
+  launchAtStartup: boolean;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
+  setLaunchAtStartup: (v: boolean) => void;
 }
 
 export interface UsageData {

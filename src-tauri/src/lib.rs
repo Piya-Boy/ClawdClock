@@ -172,6 +172,61 @@ async fn fetch_claude_usage() -> Result<UsageResult, String> {
     })
 }
 
+/* ── Idle Detection ─────────────────────────────────────────── */
+
+#[tauri::command]
+fn get_idle_seconds() -> u32 {
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::UI::Input::KeyboardAndMouse::{GetLastInputInfo, LASTINPUTINFO};
+        use windows_sys::Win32::System::SystemInformation::GetTickCount;
+        unsafe {
+            let mut lii = LASTINPUTINFO {
+                cbSize: std::mem::size_of::<LASTINPUTINFO>() as u32,
+                dwTime: 0,
+            };
+            if GetLastInputInfo(&mut lii) != 0 {
+                let elapsed = GetTickCount().wrapping_sub(lii.dwTime);
+                return elapsed / 1000;
+            }
+        }
+        0
+    }
+    #[cfg(not(target_os = "windows"))]
+    0
+}
+
+/* ── Autostart ──────────────────────────────────────────────── */
+
+#[tauri::command]
+fn set_autostart(enable: bool) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+        let exe_str = exe.to_string_lossy();
+        if enable {
+            Command::new("reg")
+                .args(["add", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+                       "/v", "ClawdClock", "/t", "REG_SZ", "/d", &exe_str, "/f"])
+                .output()
+                .map_err(|e| e.to_string())?;
+        } else {
+            Command::new("reg")
+                .args(["delete", r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run",
+                       "/v", "ClawdClock", "/f"])
+                .output()
+                .map_err(|e| e.to_string())?;
+        }
+        Ok(())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = enable;
+        Err("autostart not implemented on this platform".into())
+    }
+}
+
 /* ── Entry Point ────────────────────────────────────────────── */
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -185,6 +240,8 @@ pub fn run() {
             show_clock_window,
             hide_clock_window,
             fetch_claude_usage,
+            get_idle_seconds,
+            set_autostart,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
