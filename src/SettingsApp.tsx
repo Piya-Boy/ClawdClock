@@ -12,6 +12,8 @@ import { useIdleDetection } from './hooks/useIdleDetection';
 import { useMonitors } from './hooks/useMonitors';
 import { useUpdater } from './hooks/useUpdater';
 import { useSystemDefaults } from './hooks/useSystemDefaults';
+import { useTrayTooltip } from './hooks/useTrayTooltip';
+import { useHotkey } from './hooks/useHotkey';
 import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useChangelog } from './hooks/useChangelog';
 import { useGitHubContributions } from './hooks/useGitHubContributions';
@@ -57,10 +59,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, updateChannel, githubUsername, githubRepo, openaiApiKey,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, updateChannel, githubUsername, githubRepo, openaiApiKey, clockHotkey,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setUpdateChannel, setGithubUsername, setGithubRepo, setOpenaiApiKey,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setUpdateChannel, setGithubUsername, setGithubRepo, setOpenaiApiKey, setClockHotkey,
   } = useSettingsStore();
 
   const {
@@ -77,7 +79,10 @@ export function SettingsApp() {
   const ci = useCIStatus(githubRepo || null);
   const openai = useOpenAIUsage(openaiApiKey || null);
 
+  useTrayTooltip(sessionPct, weeklyPct);
+  useHotkey();
   const [showAchievements, setShowAchievements] = useState(false);
+  const [capturingHotkey, setCapturingHotkey] = useState(false);
   const achievements = useAchievements({
     sessionPct,
     weeklyPct,
@@ -282,6 +287,43 @@ export function SettingsApp() {
             label="Hide Taskbar"
             desc="Hide the Windows taskbar while ClawdClock is active."
             control={<Toggle value={hideTaskbar} onChange={setHideTaskbar} />}
+          />
+          <SettingRow
+            label="Clock Hotkey"
+            desc="Global shortcut to show/hide the clock."
+            control={
+              <div
+                tabIndex={0}
+                onFocus={() => setCapturingHotkey(true)}
+                onBlur={() => setCapturingHotkey(false)}
+                onKeyDown={e => {
+                  e.preventDefault();
+                  if (e.key === 'Escape') { setCapturingHotkey(false); return; }
+                  const parts: string[] = [];
+                  if (e.ctrlKey) parts.push('Ctrl');
+                  if (e.altKey) parts.push('Alt');
+                  if (e.shiftKey) parts.push('Shift');
+                  if (e.metaKey) parts.push('Meta');
+                  const k = e.key;
+                  if (!['Control','Alt','Shift','Meta'].includes(k)) {
+                    parts.push(k.length === 1 ? k.toUpperCase() : k);
+                    setClockHotkey(parts.join('+'));
+                    setCapturingHotkey(false);
+                  }
+                }}
+                style={{
+                  width: 160, padding: '7px 10px',
+                  background: capturingHotkey ? 'rgba(255,107,61,0.08)' : 'rgba(255,255,255,0.04)',
+                  border: `1px solid ${capturingHotkey ? 'rgba(255,107,61,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                  borderRadius: 6, outline: 'none', cursor: 'pointer',
+                  color: capturingHotkey ? C_ACC : '#ccc',
+                  fontFamily: FF, fontSize: 12, letterSpacing: '0.04em',
+                  userSelect: 'none',
+                }}
+              >
+                {capturingHotkey ? 'Press key combo…' : (clockHotkey || 'Click to set')}
+              </div>
+            }
           />
           <SettingRow
             label="Auto Update"

@@ -23,6 +23,7 @@ export const useSettingsStore = create<SettingsState>()(
       githubUsername: '',
       githubRepo: '',
       openaiApiKey: '',
+      clockHotkey: 'Ctrl+Shift+L',
       setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
@@ -42,6 +43,7 @@ export const useSettingsStore = create<SettingsState>()(
       setGithubUsername: (v: string) => set({ githubUsername: v }),
       setGithubRepo: (v: string) => set({ githubRepo: v }),
       setOpenaiApiKey: (v: string) => set({ openaiApiKey: v }),
+      setClockHotkey: (v: string) => set({ clockHotkey: v }),
     }),
     { name: 'clawdclock-settings' }
   )

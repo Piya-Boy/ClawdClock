@@ -41,6 +41,7 @@ export interface SettingsState {
   githubUsername: string;
   githubRepo: string;
   openaiApiKey: string;
+  clockHotkey: string;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -57,6 +58,7 @@ export interface SettingsState {
   setGithubUsername: (v: string) => void;
   setGithubRepo: (v: string) => void;
   setOpenaiApiKey: (v: string) => void;
+  setClockHotkey: (v: string) => void;
 }
 
 export interface UsageData {

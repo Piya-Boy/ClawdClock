@@ -1,5 +1,7 @@
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 use tauri::window::Monitor;
+use tauri::tray::{TrayIconBuilder, TrayIconEvent, MouseButton, MouseButtonState};
+use tauri::menu::{MenuBuilder, MenuItemBuilder};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ScrMode {
@@ -522,6 +524,43 @@ fn register_screensaver() -> Result<(), String> {
     Ok(())
 }
 
+/* ── Hotkey ─────────────────────────────────────────────────── */
+
+#[tauri::command]
+fn set_clock_hotkey(app: tauri::AppHandle, hotkey: String) -> Result<(), String> {
+    use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
+    let gs = app.global_shortcut();
+    // Unregister all current shortcuts
+    gs.unregister_all().map_err(|e| e.to_string())?;
+    if hotkey.is_empty() || hotkey.eq_ignore_ascii_case("none") {
+        return Ok(());
+    }
+    let shortcut: Shortcut = hotkey.parse().map_err(|e| format!("{e}"))?;
+    let app_handle = app.clone();
+    gs.on_shortcut(shortcut, move |_app, _sc, event| {
+        if event.state == ShortcutState::Pressed {
+            if let Some(win) = app_handle.get_webview_window("clock") {
+                if win.is_visible().unwrap_or(false) {
+                    let _ = win.hide();
+                } else {
+                    let _ = win.show();
+                    let _ = win.set_focus();
+                }
+            }
+        }
+    }).map_err(|e| e.to_string())
+}
+
+/* ── Tray ───────────────────────────────────────────────────── */
+
+#[tauri::command]
+fn update_tray_tooltip(app: tauri::AppHandle, tooltip: String) -> Result<(), String> {
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_tooltip(Some(&tooltip)).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /* ── Auto Update ────────────────────────────────────────────── */
 
 #[derive(Debug, Serialize, Clone)]
@@ -602,6 +641,51 @@ pub fn run_with_mode(mode: ScrMode) {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(move |app| {
+            // System tray (Config mode only)
+            if mode == ScrMode::Config {
+                let show_settings = MenuItemBuilder::with_id("settings", "Open Settings").build(app)?;
+                let show_clock    = MenuItemBuilder::with_id("show_clock", "Preview Clock").build(app)?;
+                let separator     = tauri::menu::PredefinedMenuItem::separator(app)?;
+                let quit          = MenuItemBuilder::with_id("quit", "Quit ClawdClock").build(app)?;
+                let menu = MenuBuilder::new(app)
+                    .item(&show_settings)
+                    .item(&show_clock)
+                    .item(&separator)
+                    .item(&quit)
+                    .build()?;
+
+                let icon = app.default_window_icon().cloned()
+                    .unwrap_or_else(|| tauri::image::Image::new_owned(vec![0u8; 4], 1, 1));
+
+                let app_handle = app.handle().clone();
+                TrayIconBuilder::with_id("main")
+                    .icon(icon)
+                    .tooltip("ClawdClock")
+                    .menu(&menu)
+                    .on_menu_event(move |app, event| match event.id.as_ref() {
+                        "settings" => {
+                            if let Some(w) = app.get_webview_window("settings") {
+                                let _ = w.show(); let _ = w.set_focus();
+                            }
+                        }
+                        "show_clock" => {
+                            if let Some(w) = app.get_webview_window("clock") {
+                                let _ = w.show(); let _ = w.set_focus();
+                            }
+                        }
+                        "quit" => { app.exit(0); }
+                        _ => {}
+                    })
+                    .on_tray_icon_event(move |_tray, event| {
+                        if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+                            if let Some(w) = app_handle.get_webview_window("settings") {
+                                let _ = w.show(); let _ = w.set_focus();
+                            }
+                        }
+                    })
+                    .build(app)?;
+            }
+
             // Global hotkey only when not in screensaver/preview mode
             if mode == ScrMode::Config {
                 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
@@ -659,6 +743,8 @@ pub fn run_with_mode(mode: ScrMode) {
             check_for_update,
             check_for_update_channel,
             install_update,
+            update_tray_tooltip,
+            set_clock_hotkey,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
