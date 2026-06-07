@@ -26,17 +26,8 @@ const SECTIONS = [
   {
     title: 'Lock Screen',
     content: [
-      { h: 'Enable Lock Screen', p: 'Toggle "Lock Screen Mode" in settings. While active, mouse movement and keyboard input are blocked.' },
-      { h: 'Setting a Password', p: 'Enter a password in the "Lock Password" field. Leave empty to exit without a password.' },
-      { h: 'Emergency Exit', p: 'In development mode, an escape bar appears at the top. In production, use your password or restart the app.' },
-    ],
-  },
-  {
-    title: 'Integrations',
-    content: [
-      { h: 'GitHub Contributions', p: 'Enter your GitHub username in settings. ClawdClock shows your last 30 days of contributions on the clock display.' },
-      { h: 'GitHub CI/CD', p: 'Enter your repo as "owner/repo" (e.g. piyaboy/clawdclock). The clock shows your latest GitHub Actions run status.' },
-      { h: 'Ollama', p: 'If Ollama is running on localhost:11434, ClawdClock automatically detects it and shows active model names.' },
+      { h: 'Enable Lock Screen', p: 'Toggle "Lock Screen Mode" in settings. While active, mouse movement and keyboard input are blocked — the clock stays on screen.' },
+      { h: 'Exiting the clock', p: 'Move your mouse to the very top of the screen. A round X button slides down. Click it or press ESC to hide the clock.' },
     ],
   },
   {
@@ -44,7 +35,7 @@ const SECTIONS = [
     content: [
       { h: 'Why does the clock not appear?', p: 'Check that "Activate After" is not set to "Never". Click "Preview Now" to test manually. Make sure no other fullscreen app is blocking it.' },
       { h: 'Usage shows 0% or is not updating', p: 'ClawdClock needs your Claude credentials at ~/.claude/.credentials.json. Log in to Claude Code (claude auth login) to generate this file.' },
-      { h: 'How do I exit the clock?', p: 'Move the mouse or press any key. If Lock Screen Mode is enabled with a password, you must enter the password to exit.' },
+      { h: 'How do I exit the clock?', p: 'Move your mouse to the top edge. A bar slides down — click Exit or press ESC. If Lock Screen Mode is on, only the escape bar works.' },
       { h: 'The settings window disappeared', p: 'ClawdClock lives in the system tray. Right-click the tray icon to reopen settings, or re-launch the app.' },
       { h: 'Clock flickers or shows black screen', p: 'Try disabling OLED Mode. On some systems, the window transparency causes flickering. Switching themes can also help.' },
       { h: 'How do I uninstall?', p: 'Use Windows Settings → Apps → ClawdClock → Uninstall. This removes the app and unregisters the screensaver.' },

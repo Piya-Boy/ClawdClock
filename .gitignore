@@ -26,3 +26,6 @@ src-tauri/updater-key.pem
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code local state
+.claude/

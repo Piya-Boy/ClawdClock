@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettingsStore } from '../stores/settingsStore';
-import type { CheckFrequencyOption } from '../types';
+
+const CHECK_INTERVAL_MS = 3_600_000; // 1 hour
+const UPDATE_CHANNEL = 'stable';
 
 export interface UpdateState {
   checking: boolean;
@@ -14,17 +16,6 @@ export interface UpdateState {
   rollingBack: boolean;
   error: string | null;
   lastChecked: Date | null;
-}
-
-function freqToMs(freq: CheckFrequencyOption): number | null {
-  const map: Record<CheckFrequencyOption, number | null> = {
-    'On Startup': null,
-    '1 minute':   60_000,
-    '5 minutes':  300_000,
-    '30 minutes': 1_800_000,
-    '1 hour':     3_600_000,
-  };
-  return map[freq];
 }
 
 function formatBytes(bytes: number): string {
@@ -57,14 +48,14 @@ export function useUpdater() {
     lastChecked: null,
   });
 
-  const { autoUpdate, checkFrequency, updateChannel } = useSettingsStore();
+  const { autoUpdate } = useSettingsStore();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const check = async () => {
     if (import.meta.env.DEV) return;
     setState(s => ({ ...s, checking: true, error: null }));
-    const channel = useSettingsStore.getState().updateChannel;
     try {
+      const channel = UPDATE_CHANNEL;
       const result = await invoke<{ version: string; body: string | null; download_url: string | null } | null>('check_for_update_channel', { channel });
       let downloadSize: number | null = null;
       if (result?.download_url) {
@@ -110,15 +101,12 @@ export function useUpdater() {
     check();
 
     if (intervalRef.current) clearInterval(intervalRef.current);
-    const ms = freqToMs(checkFrequency);
-    if (ms) {
-      intervalRef.current = setInterval(check, ms);
-    }
+    intervalRef.current = setInterval(check, CHECK_INTERVAL_MS);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [autoUpdate, checkFrequency, updateChannel]);
+  }, [autoUpdate]);
 
   return { ...state, formatSize: (n: number) => formatBytes(n), check, install, rollback };
 }

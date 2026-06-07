@@ -1,4 +1,4 @@
-import mascotGif from '../../assets/mascot.gif';
+import appIcon from '../../assets/logo.png';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
@@ -19,7 +19,7 @@ export function TitleBar() {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-        <img src={mascotGif} width={19} height={19} style={{ imageRendering: 'pixelated', display: 'block' }} alt="mascot" />
+        <img src={appIcon} width={19} height={19} style={{ imageRendering: 'pixelated', display: 'block' }} alt="ClawdClock" />
         <span style={{ fontSize: 12, fontWeight: 600, color: '#646464', fontFamily: FF, letterSpacing: '0.01em', whiteSpace: 'nowrap' }}>
           ClawdClock Settings
         </span>

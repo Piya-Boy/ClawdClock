@@ -1,42 +1,81 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
-import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat, CheckFrequencyOption, UpdateChannel } from '../types';
+import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat } from '../types';
 import type { ThemeId } from '../themes';
+
+const SYNC_EVENT = 'settings-changed';
+
+// Keys that represent persisted settings values (not action functions).
+type SettingsValues = Pick<
+  SettingsState,
+  'activateAfter' | 'sleepAfter' | 'timeFormat' | 'theme' | 'oledMode'
+  | 'launchAtStartup' | 'selectedMonitor' | 'lockScreenEnabled' | 'autoUpdate' | 'clockHotkey'
+>;
+
+// Guard against echo: when applying a change received from another window,
+// don't re-emit it.
+let applyingRemote = false;
+
+async function emitChange(patch: Partial<SettingsValues>) {
+  if (applyingRemote) return;
+  try {
+    const { emit } = await import('@tauri-apps/api/event');
+    await emit(SYNC_EVENT, patch);
+  } catch {
+    // Tauri not available (browser dev) — ignore.
+  }
+}
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set) => ({
-      activateAfter: '5 minutes',
-      sleepAfter: 'Never',
-      timeFormat: '24',
-      theme: 'classic' as ThemeId,
-      oledMode: false,
-      lockPassword: '',
-      launchAtStartup: false,
-      selectedMonitor: 0,
-      lockScreenEnabled: false,
-      autoUpdate: true,
-      checkFrequency: '5 minutes' as CheckFrequencyOption,
-      updateChannel: 'stable' as UpdateChannel,
-      clockHotkey: 'Ctrl+Shift+L',
-      setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
-      setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
-      setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
-      setTheme: (v: ThemeId) => set({ theme: v }),
-      setOledMode: (v: boolean) => set({ oledMode: v }),
-      setLockPassword: (v: string) => set({ lockPassword: v }),
-      setLaunchAtStartup: (v: boolean) => {
-        set({ launchAtStartup: v });
-        invoke('set_autostart', { enable: v }).catch(() => {});
-      },
-      setSelectedMonitor: (v: number) => set({ selectedMonitor: v }),
-      setLockScreenEnabled: (v: boolean) => set({ lockScreenEnabled: v }),
-      setAutoUpdate: (v: boolean) => set({ autoUpdate: v }),
-      setCheckFrequency: (v: CheckFrequencyOption) => set({ checkFrequency: v }),
-      setUpdateChannel: (v: UpdateChannel) => set({ updateChannel: v }),
-      setClockHotkey: (v: string) => set({ clockHotkey: v }),
-    }),
+    (set) => {
+      // set() wrapper: apply locally + broadcast to other windows.
+      const setSync = (patch: Partial<SettingsValues>) => {
+        set(patch as Partial<SettingsState>);
+        emitChange(patch);
+      };
+
+      return {
+        activateAfter: '5 minutes',
+        sleepAfter: 'Never',
+        timeFormat: '24',
+        theme: 'classic' as ThemeId,
+        oledMode: false,
+        launchAtStartup: false,
+        selectedMonitor: 0,
+        lockScreenEnabled: false,
+        autoUpdate: true,
+        clockHotkey: 'Ctrl+Shift+L',
+        setActivateAfter: (v: ActivateAfterOption) => setSync({ activateAfter: v }),
+        setSleepAfter: (v: SleepAfterOption) => setSync({ sleepAfter: v }),
+        setTimeFormat: (v: TimeFormat) => setSync({ timeFormat: v }),
+        setTheme: (v: ThemeId) => setSync({ theme: v }),
+        setOledMode: (v: boolean) => setSync({ oledMode: v }),
+        setLaunchAtStartup: (v: boolean) => {
+          setSync({ launchAtStartup: v });
+          invoke('set_autostart', { enable: v }).catch(() => {});
+        },
+        setSelectedMonitor: (v: number) => setSync({ selectedMonitor: v }),
+        setLockScreenEnabled: (v: boolean) => setSync({ lockScreenEnabled: v }),
+        setAutoUpdate: (v: boolean) => setSync({ autoUpdate: v }),
+        setClockHotkey: (v: string) => setSync({ clockHotkey: v }),
+      };
+    },
     { name: 'clawdclock-settings' }
   )
 );
+
+// Listen for changes broadcast from other windows and apply them locally.
+(async () => {
+  try {
+    const { listen } = await import('@tauri-apps/api/event');
+    await listen<Partial<SettingsValues>>(SYNC_EVENT, (e) => {
+      applyingRemote = true;
+      useSettingsStore.setState(e.payload as Partial<SettingsState>);
+      applyingRemote = false;
+    });
+  } catch {
+    // Tauri not available — ignore.
+  }
+})();

@@ -4,7 +4,6 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 const MOUSE_THRESHOLD_PX = 8;
 const DEBOUNCE_MS = 150;
 const GRACE_MS = 800;
-const IS_DEV = import.meta.env.DEV;
 
 export function useClockExit(onDismiss: () => void) {
   const startPos = useRef<{ x: number; y: number } | null>(null);
@@ -36,6 +35,7 @@ export function useClockExit(onDismiss: () => void) {
     };
 
     const onMouseMove = (e: MouseEvent) => {
+      if ((e.target as Element)?.closest('[data-escape-bar]')) return;
       if (Date.now() - shownAt.current < GRACE_MS) return;
       if (!startPos.current) {
         startPos.current = { x: e.clientX, y: e.clientY };
@@ -46,13 +46,14 @@ export function useClockExit(onDismiss: () => void) {
       if (dx > MOUSE_THRESHOLD_PX || dy > MOUSE_THRESHOLD_PX) dismiss();
     };
 
-    const onMouseDown = () => dismiss();
+    const onMouseDown = (e: MouseEvent) => {
+      if ((e.target as Element)?.closest('[data-escape-bar]')) return;
+      dismiss();
+    };
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (IS_DEV) {
-        if (e.key === 'Escape' || e.key === 'F11') return;
-        if ((e.ctrlKey || e.metaKey) && e.key === ',') return;
-      }
+      if (e.key === 'Escape' || e.key === 'F11') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') return;
       dismiss();
     };
 

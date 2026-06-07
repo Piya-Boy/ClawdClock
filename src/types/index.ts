@@ -19,9 +19,6 @@ export type SleepAfterOption =
 
 export type UsageStatus = 'healthy' | 'warning' | 'critical';
 
-export type CheckFrequencyOption = 'On Startup' | '1 minute' | '5 minutes' | '30 minutes' | '1 hour';
-export type UpdateChannel = 'stable' | 'beta' | 'dev';
-
 import type { ThemeId } from '../themes';
 
 export interface SettingsState {
@@ -30,26 +27,20 @@ export interface SettingsState {
   timeFormat: TimeFormat;
   theme: ThemeId;
   oledMode: boolean;
-  lockPassword: string;
   launchAtStartup: boolean;
   selectedMonitor: number;
   lockScreenEnabled: boolean;
   autoUpdate: boolean;
-  checkFrequency: CheckFrequencyOption;
-  updateChannel: UpdateChannel;
   clockHotkey: string;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
   setTheme: (v: ThemeId) => void;
   setOledMode: (v: boolean) => void;
-  setLockPassword: (v: string) => void;
   setLaunchAtStartup: (v: boolean) => void;
   setSelectedMonitor: (v: number) => void;
   setLockScreenEnabled: (v: boolean) => void;
   setAutoUpdate: (v: boolean) => void;
-  setCheckFrequency: (v: CheckFrequencyOption) => void;
-  setUpdateChannel: (v: UpdateChannel) => void;
   setClockHotkey: (v: string) => void;
 }
 

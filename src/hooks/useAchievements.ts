@@ -18,8 +18,6 @@ const DEFINITIONS: Omit<Achievement, 'unlockedAt'>[] = [
   { id: 'weekly_90',        title: 'Power User',         desc: 'Reach 90% weekly usage' },
   { id: 'lock_screen',      title: 'Locked In',          desc: 'Use Lock Screen Mode' },
   { id: 'oled_mode',        title: 'Dark Arts',          desc: 'Enable OLED Mode' },
-  { id: 'github_connected', title: 'Open Source',        desc: 'Connect your GitHub account' },
-  { id: 'ollama_active',    title: 'Local AI',           desc: 'Run a model with Ollama' },
   { id: 'theme_changed',    title: 'Make It Yours',      desc: 'Change the clock theme' },
 ];
 
@@ -36,8 +34,6 @@ export function useAchievements(params: {
   weeklyPct: number;
   lockScreenEnabled: boolean;
   oledMode: boolean;
-  githubUsername: string;
-  ollamaActive: boolean;
   themeChanged: boolean;
 }) {
   const [unlocked, setUnlocked] = useState<Record<string, string>>(load);
@@ -70,11 +66,9 @@ export function useAchievements(params: {
     if (params.weeklyPct  >= 90)  unlock('weekly_90');
     if (params.lockScreenEnabled) unlock('lock_screen');
     if (params.oledMode)          unlock('oled_mode');
-    if (params.githubUsername)    unlock('github_connected');
-    if (params.ollamaActive)      unlock('ollama_active');
     if (params.themeChanged)      unlock('theme_changed');
   }, [params.sessionPct, params.weeklyPct, params.lockScreenEnabled, params.oledMode,
-      params.githubUsername, params.ollamaActive, params.themeChanged]);
+      params.themeChanged]);
 
   const all: Achievement[] = DEFINITIONS.map(d => ({
     ...d,

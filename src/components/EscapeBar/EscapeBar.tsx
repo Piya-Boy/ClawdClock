@@ -1,212 +1,81 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import mascotIcon from '../../assets/mascot.gif';
 
-const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
-const BAR_H = 48;
-const IS_DEV = import.meta.env.DEV;
+const SHOW_ZONE_PX = 80; // mouse within top 80px = show button
 
-interface Props {
-  visible: boolean;
-  now: Date;
-  onKeepAlive: () => void;
-  onHide: () => void;
-  onRequestUnlock?: () => void;
-  lockScreenEnabled: boolean;
-  lockPassword: string;
-}
-
-function pad(n: number) { return String(n).padStart(2, '0'); }
-
-function IconBtn({ label, title, onClick, children }: {
-  label: string; title: string; onClick: () => void; children: React.ReactNode;
-}) {
-  return (
-    <button
-      title={title}
-      onClick={onClick}
-      aria-label={label}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '5px 12px',
-        background: 'transparent',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: 6, cursor: 'pointer',
-        color: 'rgba(255,255,255,0.7)',
-        fontFamily: FF, fontSize: 11, fontWeight: 600,
-        letterSpacing: '0.04em',
-        transition: 'background 0.12s, border-color 0.12s, color 0.12s',
-        whiteSpace: 'nowrap',
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.08)';
-        (e.currentTarget as HTMLButtonElement).style.color = '#fff';
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-        (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.7)';
-      }}
-    >
-      {children}
-      <span>{label}</span>
-    </button>
-  );
-}
-
-export function EscapeBar({ visible, now, onKeepAlive, onHide, onRequestUnlock, lockScreenEnabled, lockPassword }: Props) {
-  // Production: pure ambient mode — no controls, no overlays
-  if (!IS_DEV) return null;
-
-  const h = pad(now.getHours());
-  const m = pad(now.getMinutes());
-  const timeStr = `${h}:${m}`;
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        handleExit();
-      }
-      if (e.key === 'F11') {
-        e.preventDefault();
-        handleExit();
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === ',') {
-        e.preventDefault();
-        handleSettings();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lockScreenEnabled, lockPassword]);
+// EscapeBar = explicit exit affordance. Always works, even with lock screen on —
+// lock screen only blocks accidental dismiss (mouse move / key press), not this button.
+export function EscapeBar() {
+  const [visible, setVisible] = useState(false);
 
   const handleExit = () => {
-    if (lockScreenEnabled && lockPassword) {
-      onRequestUnlock?.();
-      return;
-    }
-    if (lockScreenEnabled) return;
     invoke('hide_clock_window').catch(() => {});
   };
 
-  const handleSettings = () => {
-    if (lockScreenEnabled) return;
-    invoke('open_settings_window').catch(() => {});
-  };
-
-  const handleMinimize = () => {
-    if (lockScreenEnabled) return;
-    invoke('hide_clock_window').catch(() => {});
-  };
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const next = e.clientY <= SHOW_ZONE_PX;
+      setVisible(prev => (prev === next ? prev : next));
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'F11') {
+        e.preventDefault();
+        handleExit();
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, []);
 
   return (
-    <>
-      {/* invisible hover zone at top — always present */}
-      <div
+    <div
+      data-escape-bar="true"
+      style={{
+        position: 'fixed',
+        top: 14,
+        left: '50%',
+        transform: visible
+          ? 'translateX(-50%) translateY(0) scale(1)'
+          : 'translateX(-50%) translateY(-70px) scale(0.8)',
+        opacity: visible ? 1 : 0,
+        transition: 'transform 0.22s cubic-bezier(0.34,1.56,0.64,1), opacity 0.18s ease',
+        zIndex: 1001,
+        pointerEvents: visible ? 'auto' : 'none',
+      }}
+    >
+      <button
+        title="Exit (Esc)"
+        onClick={handleExit}
         style={{
-          position: 'fixed', top: 0, left: 0, right: 0,
-          height: 5, zIndex: 1000, pointerEvents: 'auto',
+          width: 44, height: 44,
+          borderRadius: '50%',
+          background: 'rgba(10,10,10,0.8)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'background 0.15s, border-color 0.15s, transform 0.15s',
+          outline: 'none',
         }}
-      />
-
-      {/* the bar itself */}
-      <div
-        onMouseEnter={onKeepAlive}
-        onMouseLeave={onHide}
-        style={{
-          position: 'fixed', top: 0, left: 0, right: 0,
-          height: BAR_H,
-          zIndex: 1001,
-          pointerEvents: visible ? 'auto' : 'none',
-          transform: visible ? 'translateY(0)' : 'translateY(-100%)',
-          opacity: visible ? 1 : 0,
-          transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease',
-          background: 'rgba(10,10,10,0.88)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          display: 'flex',
-          alignItems: 'center',
-          padding: '0 20px',
-          gap: 12,
-          userSelect: 'none',
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'rgba(210,40,40,0.9)';
+          e.currentTarget.style.borderColor = 'rgba(255,80,80,0.6)';
+          e.currentTarget.style.transform = 'scale(1.12)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'rgba(10,10,10,0.8)';
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+          e.currentTarget.style.transform = 'scale(1)';
         }}
       >
-        {/* LEFT: logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
-          <img
-            src={mascotIcon}
-            width={22} height={22}
-            style={{ imageRendering: 'pixelated', display: 'block' }}
-            alt="ClawdClock"
-          />
-          <span style={{
-            fontSize: 12, fontWeight: 800, color: 'rgba(255,255,255,0.5)',
-            fontFamily: FF, letterSpacing: '0.06em',
-          }}>
-            CLAWDCLOCK
-          </span>
-        </div>
-
-        {/* CENTER: current time */}
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-          <span style={{
-            fontSize: 14, fontWeight: 700,
-            color: 'rgba(255,255,255,0.6)',
-            fontFamily: FF, letterSpacing: '0.12em',
-            fontVariantNumeric: 'tabular-nums',
-          }}>
-            {timeStr}
-          </span>
-        </div>
-
-        {/* RIGHT: action buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: '0 0 auto' }}>
-          <IconBtn label="Settings" title="Open Settings (Ctrl+,)" onClick={handleSettings}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="6" r="2" stroke="currentColor" strokeWidth="1.4"/>
-              <path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.5 2.5l.7.7M8.8 8.8l.7.7M2.5 9.5l.7-.7M8.8 3.2l.7-.7"
-                stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-            </svg>
-          </IconBtn>
-
-          <IconBtn label="Minimize" title="Minimize" onClick={handleMinimize}>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 6h8" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-            </svg>
-          </IconBtn>
-
-          <button
-            title="Exit Fullscreen (Esc)"
-            onClick={handleExit}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '5px 14px',
-              background: 'rgba(255,60,60,0.15)',
-              border: '1px solid rgba(255,60,60,0.3)',
-              borderRadius: 6, cursor: 'pointer',
-              color: 'rgba(255,120,120,0.9)',
-              fontFamily: FF, fontSize: 11, fontWeight: 700,
-              letterSpacing: '0.04em',
-              transition: 'background 0.12s, border-color 0.12s',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,60,60,0.28)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,60,60,0.6)';
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,60,60,0.15)';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,60,60,0.3)';
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M1 1l8 8M9 1L1 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-            </svg>
-            <span>Exit Fullscreen</span>
-          </button>
-        </div>
-      </div>
-    </>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 2l10 10M12 2L2 12" stroke="rgba(255,255,255,0.9)" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      </button>
+    </div>
   );
 }

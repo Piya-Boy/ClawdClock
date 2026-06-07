@@ -12,6 +12,7 @@ export function useClaudeUsage() {
     refreshUsage();
 
     const refreshId = setInterval(() => {
+      if (document.hidden) return; // window not shown — skip network fetch
       // Unstick isLoading if a request hung for >15s
       const state = useUsageStore.getState();
       if (state.isLoading) {
@@ -26,11 +27,19 @@ export function useClaudeUsage() {
       refreshUsage();
     }, REFRESH_INTERVAL_MS);
 
-    const countdownId = setInterval(tickCountdowns, COUNTDOWN_TICK_MS);
+    const countdownId = setInterval(() => {
+      if (document.hidden) return;
+      tickCountdowns();
+    }, COUNTDOWN_TICK_MS);
+
+    // Refresh immediately when window becomes visible (was hidden, now shown)
+    const onVis = () => { if (!document.hidden) refreshUsage(); };
+    document.addEventListener('visibilitychange', onVis);
 
     return () => {
       clearInterval(refreshId);
       clearInterval(countdownId);
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, []);
 

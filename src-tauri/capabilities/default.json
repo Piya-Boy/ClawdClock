@@ -5,6 +5,7 @@
   "windows": ["clock", "settings"],
   "permissions": [
     "core:default",
+    "core:event:default",
     "core:app:allow-version",
     "core:window:allow-hide",
     "core:window:allow-minimize",

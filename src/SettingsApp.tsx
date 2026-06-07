@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import mascotGif from './assets/mascot.gif';
+import appIcon from './assets/logo.png';
 import { TitleBar } from './components/Settings/TitleBar';
 import { SettingRow } from './components/Settings/SettingRow';
 import { Dropdown } from './components/Settings/Dropdown';
@@ -14,7 +14,6 @@ import { useUpdater } from './hooks/useUpdater';
 import { useSystemDefaults } from './hooks/useSystemDefaults';
 import { useTrayTooltip } from './hooks/useTrayTooltip';
 import { useHotkey } from './hooks/useHotkey';
-import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useChangelog } from './hooks/useChangelog';
 import { ChangelogPanel } from './components/Settings/ChangelogPanel';
 import { useAchievements } from './hooks/useAchievements';
@@ -55,23 +54,22 @@ export function SettingsApp() {
 
   const {
     activateAfter, sleepAfter, timeFormat,
-    theme: themeId, oledMode, lockPassword,
+    theme: themeId, oledMode,
     launchAtStartup, selectedMonitor, lockScreenEnabled, autoUpdate, clockHotkey,
     setActivateAfter, setSleepAfter, setTimeFormat,
-    setTheme, setOledMode, setLockPassword,
+    setTheme, setOledMode,
     setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setAutoUpdate, setClockHotkey,
   } = useSettingsStore();
 
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
-    error, lastUpdated,
+    error,
   } = useUsageStore();
 
   const theme = getTheme(themeId);
   const monitors = useMonitors();
   const updater = useUpdater();
-  const ollama = useOllamaStatus();
 
   useTrayTooltip(sessionPct, weeklyPct);
   useHotkey();
@@ -82,8 +80,6 @@ export function SettingsApp() {
     weeklyPct,
     lockScreenEnabled,
     oledMode,
-    githubUsername: '',
-    ollamaActive: ollama.available && ollama.running.length > 0,
     themeChanged: themeId !== 'classic',
   });
 
@@ -121,8 +117,8 @@ export function SettingsApp() {
         }}>
           {/* App header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-            <img src={mascotGif} width={40} height={40}
-                 style={{ imageRendering: 'pixelated', display: 'block', borderRadius: 6 }} alt="mascot" />
+            <img src={appIcon} width={40} height={40}
+                 style={{ imageRendering: 'pixelated', display: 'block', borderRadius: 6 }} alt="ClawdClock" />
             <div>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#e0e0e0', fontFamily: FF, lineHeight: 1 }}>ClawdClock</div>
               <div style={{ fontSize: 11, color: '#363636', fontFamily: FF, marginTop: 5, fontWeight: 500, letterSpacing: '0.01em' }}>
@@ -227,30 +223,6 @@ export function SettingsApp() {
               />
             }
           />
-          {lockScreenEnabled && (
-            <SettingRow
-              label="Lock Password"
-              desc="Required to exit lock screen. Leave empty to disable."
-              control={
-                <input
-                  type="password"
-                  value={lockPassword}
-                  onChange={e => setLockPassword(e.target.value)}
-                  placeholder="Set password…"
-                  autoComplete="new-password"
-                  style={{
-                    width: 160, padding: '7px 10px',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: 6, outline: 'none',
-                    color: '#ccc', fontFamily: FF, fontSize: 13,
-                    letterSpacing: '0.08em',
-                  }}
-                />
-              }
-            />
-          )}
-
           <SettingRow
             label="Clock Hotkey"
             desc="Global shortcut to show/hide the clock."
@@ -348,9 +320,6 @@ export function SettingsApp() {
               sessionColor={sessionColor}
               weeklyColor={weeklyColor}
               error={error}
-              lastUpdated={lastUpdated}
-              ollamaAvailable={ollama.available}
-              ollamaRunning={ollama.running}
             />
           </div>
         </div>

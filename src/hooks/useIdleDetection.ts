@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettingsStore } from '../stores/settingsStore';
 
-const POLL_INTERVAL_MS = 5_000;
+const POLL_INTERVAL_MS = 10_000;
 
 function parseActivateAfterSeconds(value: string): number {
   const map: Record<string, number> = {

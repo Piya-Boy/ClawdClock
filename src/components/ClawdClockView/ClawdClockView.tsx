@@ -1,9 +1,6 @@
 import { FlipClock } from '../FlipClock/FlipClock';
 import { UsageSection } from '../UsagePanel/UsageSection';
-import { OllamaSection } from '../OllamaPanel/OllamaSection';
-import { formatTimeAgo } from '../../utils/countdown';
 import type { Theme } from '../../themes';
-import type { OllamaModel } from '../../hooks/useOllamaStatus';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -19,9 +16,6 @@ interface Props {
   sessionColor: string;
   weeklyColor: string;
   error: string | null;
-  lastUpdated: Date | null;
-  ollamaAvailable?: boolean;
-  ollamaRunning?: OllamaModel[];
 }
 
 export function ClawdClockView({
@@ -29,9 +23,7 @@ export function ClawdClockView({
   sessionPct, weeklyPct,
   sessionCountdown, weeklyCountdown,
   sessionColor, weeklyColor,
-  error, lastUpdated,
-  ollamaAvailable = false,
-  ollamaRunning = [],
+  error,
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
@@ -69,26 +61,20 @@ export function ClawdClockView({
           }}>
             CLAUDE CODE
           </div>
-          {(lastUpdated || error) && (
+          {error && (
             <div style={{
               fontSize: 22, fontWeight: 600,
-              color: error ? theme.critical : theme.offlineColor,
+              color: theme.critical,
               fontFamily: FF, letterSpacing: '0.08em',
               alignSelf: 'flex-end', marginBottom: 4,
             }}>
-              {error ? 'OFFLINE' : lastUpdated ? `UPDATED ${formatTimeAgo(lastUpdated).toUpperCase()}` : ''}
+              OFFLINE
             </div>
           )}
         </div>
         <UsageSection label="SESSION (5H)" pct={sessionPct} color={sessionColor} resetIn={sessionCountdown} theme={theme} />
         <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
         <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} resetLabel="RESETS" theme={theme} />
-        {ollamaAvailable && (
-          <>
-            <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
-            <OllamaSection available={ollamaAvailable} running={ollamaRunning} theme={theme} />
-          </>
-        )}
       </div>
     </div>
   );
