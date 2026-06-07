@@ -529,7 +529,7 @@ Target: Seamless Updates
 
 * [x] Stable channel (GitHub releases)
 * [x] Beta channel
-* [ ] Development channel
+* [x] Development channel
 
 ### Update Experience
 

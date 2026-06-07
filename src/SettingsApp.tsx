@@ -400,7 +400,7 @@ export function SettingsApp() {
                 control={
                   <SegControl
                     value={updateChannel}
-                    options={[{ val: 'stable', label: 'Stable' }, { val: 'beta', label: 'Beta' }]}
+                    options={[{ val: 'stable', label: 'Stable' }, { val: 'beta', label: 'Beta' }, { val: 'dev', label: 'Dev' }]}
                     onChange={v => setUpdateChannel(v as any)}
                   />
                 }

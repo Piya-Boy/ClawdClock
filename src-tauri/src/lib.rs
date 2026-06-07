@@ -606,6 +606,7 @@ async fn check_for_update_channel(app: tauri::AppHandle, channel: String) -> Res
     use tauri_plugin_updater::UpdaterExt;
     let endpoint = match channel.as_str() {
         "beta" => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest-beta.json",
+        "dev"  => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest-dev.json",
         _      => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest.json",
     };
     let url = endpoint.parse::<tauri::Url>().map_err(|e| e.to_string())?;

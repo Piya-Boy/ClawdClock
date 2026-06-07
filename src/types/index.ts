@@ -20,7 +20,7 @@ export type SleepAfterOption =
 export type UsageStatus = 'healthy' | 'warning' | 'critical';
 
 export type CheckFrequencyOption = 'On Startup' | '1 minute' | '5 minutes' | '30 minutes' | '1 hour';
-export type UpdateChannel = 'stable' | 'beta';
+export type UpdateChannel = 'stable' | 'beta' | 'dev';
 
 import type { ThemeId } from '../themes';
 
