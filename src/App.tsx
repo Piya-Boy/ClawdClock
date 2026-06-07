@@ -21,7 +21,7 @@ export function App() {
   useClaudeUsage();
   useClockExit();
 
-  const { lockScreenEnabled, theme: themeId, oledMode } = useSettingsStore();
+  const { lockScreenEnabled, theme: themeId, oledMode, timeFormat } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
   const escapeBar = useEscapeBar();
   const theme = getTheme(themeId);
@@ -64,6 +64,7 @@ export function App() {
           hours={now.getHours()}
           minutes={now.getMinutes()}
           theme={theme}
+          timeFormat={timeFormat}
           sessionPct={sessionPct}
           weeklyPct={weeklyPct}
           sessionCountdown={sessionCountdown}

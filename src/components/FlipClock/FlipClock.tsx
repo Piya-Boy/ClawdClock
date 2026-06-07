@@ -5,9 +5,10 @@ interface Props {
   hours: number;
   minutes: number;
   theme: Theme;
+  ampm?: string;
 }
 
-export function FlipClock({ hours, minutes, theme }: Props) {
+export function FlipClock({ hours, minutes, theme, ampm }: Props) {
   const h = String(hours).padStart(2, '0');
   const m = String(minutes).padStart(2, '0');
   return (
@@ -20,6 +21,15 @@ export function FlipClock({ hours, minutes, theme }: Props) {
         <FlipDigit value={m[0]} theme={theme} />
         <FlipDigit value={m[1]} theme={theme} />
       </div>
+      {ampm && (
+        <div style={{
+          fontSize: 28, fontWeight: 700,
+          color: theme.digitColorBot, fontFamily: "'Barlow','Helvetica Neue',Helvetica,sans-serif",
+          letterSpacing: '0.12em', marginTop: 4, alignSelf: 'flex-end',
+        }}>
+          {ampm}
+        </div>
+      )}
     </div>
   );
 }

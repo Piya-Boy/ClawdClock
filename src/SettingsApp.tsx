@@ -279,6 +279,7 @@ export function SettingsApp() {
               hours={now.getHours()}
               minutes={now.getMinutes()}
               theme={theme}
+              timeFormat={timeFormat}
               sessionPct={sessionPct}
               weeklyPct={weeklyPct}
               sessionCountdown={sessionCountdown}

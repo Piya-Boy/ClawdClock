@@ -9,6 +9,7 @@ interface Props {
   hours: number;
   minutes: number;
   theme: Theme;
+  timeFormat: '24' | '12';
   sessionPct: number;
   weeklyPct: number;
   sessionCountdown: string;
@@ -20,12 +21,15 @@ interface Props {
 }
 
 export function ClawdClockView({
-  hours, minutes, theme,
+  hours, minutes, theme, timeFormat,
   sessionPct, weeklyPct,
   sessionCountdown, weeklyCountdown,
   sessionColor, weeklyColor,
   error, lastUpdated,
 }: Props) {
+  const rawH = hours;
+  const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
+  const ampm = timeFormat === '12' ? (rawH >= 12 ? 'PM' : 'AM') : undefined;
   return (
     <div style={{
       width: 1920, height: 1080,
@@ -39,7 +43,7 @@ export function ClawdClockView({
         width: '40%', height: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <FlipClock hours={hours} minutes={minutes} theme={theme} />
+        <FlipClock hours={displayH} minutes={minutes} theme={theme} ampm={ampm} />
       </div>
 
       {/* Right: Usage panel */}
