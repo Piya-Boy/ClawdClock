@@ -12,6 +12,7 @@ import { useUsageStore } from './stores/usageStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { getTheme } from './themes';
 import { useOledShift } from './hooks/useOledShift';
+import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { invoke } from '@tauri-apps/api/core';
 import './styles/globals.css';
 
@@ -27,6 +28,7 @@ export function App() {
   const { lockScreenEnabled, lockPassword, theme: themeId, oledMode, timeFormat } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
   const escapeBar = useEscapeBar();
+  const ollama = useOllamaStatus();
   const theme = getTheme(themeId);
 
   const needsPassword = lockScreenEnabled && lockPassword.length > 0;
@@ -78,7 +80,7 @@ export function App() {
         />
       )}
 
-      <BouncingMascot />
+      <BouncingMascot sessionPct={sessionPct} weeklyPct={weeklyPct} />
 
       <div style={{
         transform: `scale(${scale}) translate(${oledShift.x}px, ${oledShift.y}px)`,
@@ -99,6 +101,8 @@ export function App() {
           weeklyColor={weeklyColor}
           error={error}
           lastUpdated={lastUpdated}
+          ollamaAvailable={ollama.available}
+          ollamaRunning={ollama.running}
         />
       </div>
     </div>

@@ -1,7 +1,9 @@
 import { FlipClock } from '../FlipClock/FlipClock';
 import { UsageSection } from '../UsagePanel/UsageSection';
+import { OllamaSection } from '../OllamaPanel/OllamaSection';
 import { formatTimeAgo } from '../../utils/countdown';
 import type { Theme } from '../../themes';
+import type { OllamaModel } from '../../hooks/useOllamaStatus';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -18,6 +20,8 @@ interface Props {
   weeklyColor: string;
   error: string | null;
   lastUpdated: Date | null;
+  ollamaAvailable?: boolean;
+  ollamaRunning?: OllamaModel[];
 }
 
 export function ClawdClockView({
@@ -26,6 +30,8 @@ export function ClawdClockView({
   sessionCountdown, weeklyCountdown,
   sessionColor, weeklyColor,
   error, lastUpdated,
+  ollamaAvailable = false,
+  ollamaRunning = [],
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
@@ -77,6 +83,12 @@ export function ClawdClockView({
         <UsageSection label="SESSION (5H)" pct={sessionPct} color={sessionColor} resetIn={sessionCountdown} theme={theme} />
         <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
         <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} resetLabel="RESETS" theme={theme} />
+        {ollamaAvailable && (
+          <>
+            <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
+            <OllamaSection available={ollamaAvailable} running={ollamaRunning} theme={theme} />
+          </>
+        )}
       </div>
     </div>
   );

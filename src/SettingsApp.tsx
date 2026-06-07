@@ -12,6 +12,7 @@ import { useIdleDetection } from './hooks/useIdleDetection';
 import { useMonitors } from './hooks/useMonitors';
 import { useUpdater } from './hooks/useUpdater';
 import { useSystemDefaults } from './hooks/useSystemDefaults';
+import { useOllamaStatus } from './hooks/useOllamaStatus';
 import { useUsageStore } from './stores/usageStore';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
@@ -43,10 +44,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency,
   } = useSettingsStore();
 
   const {
@@ -58,6 +59,7 @@ export function SettingsApp() {
   const theme = getTheme(themeId);
   const monitors = useMonitors();
   const updater = useUpdater();
+  const ollama = useOllamaStatus();
 
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
   const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.healthy;
@@ -247,9 +249,22 @@ export function SettingsApp() {
           />
           <SettingRow
             label="Auto Update"
-            desc="Check for updates automatically on startup."
+            desc="Check for updates automatically."
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
           />
+          {autoUpdate && (
+            <SettingRow
+              label="Check Frequency"
+              desc="How often to check for updates."
+              control={
+                <Dropdown
+                  value={checkFrequency}
+                  options={['On Startup', '1 minute', '5 minutes', '30 minutes', '1 hour']}
+                  onChange={v => setCheckFrequency(v as any)}
+                />
+              }
+            />
+          )}
 
           {/* Preview Now */}
           <button
@@ -306,6 +321,8 @@ export function SettingsApp() {
               weeklyColor={weeklyColor}
               error={error}
               lastUpdated={lastUpdated}
+              ollamaAvailable={ollama.available}
+              ollamaRunning={ollama.running}
             />
           </div>
         </div>

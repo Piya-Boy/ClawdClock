@@ -498,7 +498,7 @@ Target: Professional Setup
 * [ ] GitHub Activity
 * [ ] GitHub Contributions
 * [ ] CI/CD Status
-* [ ] Ollama Usage
+* [x] Ollama Usage
 * [ ] OpenAI Usage
 * [ ] Gemini Usage
 
@@ -506,7 +506,7 @@ Target: Professional Setup
 
 * [ ] Animated Mascot
 * [x] DVD Bouncing Mascot
-* [ ] Mascot Reactions
+* [x] Mascot Reactions
 * [ ] Seasonal Themes
 * [ ] Achievement System
 
@@ -559,7 +559,7 @@ Target: Seamless Updates
 ### Settings
 
 * [x] Enable Auto Update
-* [ ] Check Frequency
+* [x] Check Frequency
 * [ ] Update Channel Selection
 * [ ] Download Updates Automatically
 

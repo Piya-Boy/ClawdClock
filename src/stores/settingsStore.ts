@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
-import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat } from '../types';
+import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat, CheckFrequencyOption } from '../types';
 import type { ThemeId } from '../themes';
 
 export const useSettingsStore = create<SettingsState>()(
@@ -18,6 +18,7 @@ export const useSettingsStore = create<SettingsState>()(
       lockScreenEnabled: false,
       hideTaskbar: false,
       autoUpdate: true,
+      checkFrequency: '5 minutes' as CheckFrequencyOption,
       setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
@@ -32,6 +33,7 @@ export const useSettingsStore = create<SettingsState>()(
       setLockScreenEnabled: (v: boolean) => set({ lockScreenEnabled: v }),
       setHideTaskbar: (v: boolean) => set({ hideTaskbar: v }),
       setAutoUpdate: (v: boolean) => set({ autoUpdate: v }),
+      setCheckFrequency: (v: CheckFrequencyOption) => set({ checkFrequency: v }),
     }),
     { name: 'clawdclock-settings' }
   )

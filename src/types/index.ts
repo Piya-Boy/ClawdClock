@@ -19,6 +19,8 @@ export type SleepAfterOption =
 
 export type UsageStatus = 'healthy' | 'warning' | 'critical';
 
+export type CheckFrequencyOption = 'On Startup' | '1 minute' | '5 minutes' | '30 minutes' | '1 hour';
+
 import type { ThemeId } from '../themes';
 
 export interface SettingsState {
@@ -33,6 +35,7 @@ export interface SettingsState {
   lockScreenEnabled: boolean;
   hideTaskbar: boolean;
   autoUpdate: boolean;
+  checkFrequency: CheckFrequencyOption;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -44,6 +47,7 @@ export interface SettingsState {
   setLockScreenEnabled: (v: boolean) => void;
   setHideTaskbar: (v: boolean) => void;
   setAutoUpdate: (v: boolean) => void;
+  setCheckFrequency: (v: CheckFrequencyOption) => void;
 }
 
 export interface UsageData {

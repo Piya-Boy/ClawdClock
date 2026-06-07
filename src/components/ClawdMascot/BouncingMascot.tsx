@@ -3,8 +3,28 @@ import { useBouncingMascot } from '../../hooks/useBouncingMascot';
 
 const MASCOT_SIZE = 160;
 
-export function BouncingMascot() {
+interface Props {
+  sessionPct: number;
+  weeklyPct: number;
+}
+
+function getMascotFilter(sessionPct: number, weeklyPct: number): string {
+  const maxPct = Math.max(sessionPct, weeklyPct);
+  if (maxPct >= 90) {
+    // critical — red glow, slight shake via hue-rotate
+    return 'drop-shadow(0 0 18px rgba(255,60,60,0.9)) hue-rotate(330deg) saturate(2)';
+  }
+  if (maxPct >= 70) {
+    // warning — orange glow
+    return 'drop-shadow(0 0 14px rgba(255,180,0,0.8)) sepia(0.4) saturate(1.5)';
+  }
+  // healthy — subtle glow
+  return 'drop-shadow(0 0 8px rgba(0,255,160,0.35))';
+}
+
+export function BouncingMascot({ sessionPct, weeklyPct }: Props) {
   const { ref } = useBouncingMascot();
+  const filter = getMascotFilter(sessionPct, weeklyPct);
 
   return (
     <div ref={ref} style={{
@@ -19,7 +39,12 @@ export function BouncingMascot() {
         src={mascotGif}
         width={MASCOT_SIZE}
         height={MASCOT_SIZE}
-        style={{ display: 'block', imageRendering: 'pixelated' }}
+        style={{
+          display: 'block',
+          imageRendering: 'pixelated',
+          filter,
+          transition: 'filter 1s ease',
+        }}
         alt="mascot"
       />
     </div>

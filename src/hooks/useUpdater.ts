@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettingsStore } from '../stores/settingsStore';
+import type { CheckFrequencyOption } from '../types';
 
 export interface UpdateState {
   checking: boolean;
@@ -10,6 +11,17 @@ export interface UpdateState {
   installing: boolean;
   error: string | null;
   lastChecked: Date | null;
+}
+
+function freqToMs(freq: CheckFrequencyOption): number | null {
+  const map: Record<CheckFrequencyOption, number | null> = {
+    'On Startup': null,
+    '1 minute':   60_000,
+    '5 minutes':  300_000,
+    '30 minutes': 1_800_000,
+    '1 hour':     3_600_000,
+  };
+  return map[freq];
 }
 
 export function useUpdater() {
@@ -22,6 +34,9 @@ export function useUpdater() {
     error: null,
     lastChecked: null,
   });
+
+  const { autoUpdate, checkFrequency } = useSettingsStore();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const check = async () => {
     if (import.meta.env.DEV) return;
@@ -51,8 +66,20 @@ export function useUpdater() {
   };
 
   useEffect(() => {
-    if (useSettingsStore.getState().autoUpdate) check();
-  }, []);
+    if (!autoUpdate) return;
+
+    check();
+
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    const ms = freqToMs(checkFrequency);
+    if (ms) {
+      intervalRef.current = setInterval(check, ms);
+    }
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoUpdate, checkFrequency]);
 
   return { ...state, check, install };
 }
