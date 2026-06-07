@@ -20,6 +20,7 @@ import { ChangelogPanel } from './components/Settings/ChangelogPanel';
 import { useAchievements } from './hooks/useAchievements';
 import { AchievementToast } from './components/Achievements/AchievementToast';
 import { AchievementsPanel } from './components/Achievements/AchievementsPanel';
+import { HelpPanel } from './components/Settings/HelpPanel';
 import { useUsageStore } from './stores/usageStore';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
@@ -47,6 +48,7 @@ export function SettingsApp() {
 
   const [appVersion, setAppVersion] = useState('');
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   useEffect(() => { getVersion().then(setAppVersion).catch(() => {}); }, []);
 
   const changelog = useChangelog();
@@ -96,6 +98,7 @@ export function SettingsApp() {
     {showAchievements && (
       <AchievementsPanel achievements={achievements.all} onClose={() => setShowAchievements(false)} />
     )}
+    {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
     <div style={{
       position: 'fixed', inset: 0,
       background: '#0d0d0d',
@@ -439,6 +442,18 @@ export function SettingsApp() {
           >
             🏆 {achievements.all.filter(a => a.unlockedAt).length}/{achievements.all.length}
           </button>
+          <button
+            onClick={() => setShowHelp(true)}
+            style={{
+              width: 20, height: 20, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer', color: '#444',
+              fontFamily: FF, fontSize: 11, fontWeight: 700,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >?</button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

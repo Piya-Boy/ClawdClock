@@ -478,8 +478,8 @@ Target: Professional Setup
 
 ## Documentation
 
-* [ ] Installation Guide
-* [ ] User Guide
+* [x] Installation Guide
+* [x] User Guide
 * [ ] FAQ
 
 ## Website
@@ -503,10 +503,10 @@ Target: Professional Setup
 
 ## Fun Features
 
-* [ ] Animated Mascot
+* [x] Animated Mascot
 * [x] DVD Bouncing Mascot
 * [x] Mascot Reactions
-* [ ] Seasonal Themes
+* [x] Seasonal Themes
 * [x] Achievement System
 
 ---
@@ -560,7 +560,7 @@ Target: Seamless Updates
 * [x] Enable Auto Update
 * [x] Check Frequency
 * [ ] Update Channel Selection
-* [ ] Download Updates Automatically
+* [x] Download Updates Automatically
 
 ### Tauri Integration
 

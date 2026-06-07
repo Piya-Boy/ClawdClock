@@ -3,7 +3,11 @@ export type ThemeId =
   | 'oled'
   | 'fliqlo'
   | 'terminal'
-  | 'amber';
+  | 'amber'
+  | 'spring'
+  | 'summer'
+  | 'autumn'
+  | 'winter';
 
 
 export interface Theme {
@@ -126,9 +130,93 @@ export const THEMES: Record<ThemeId, Theme> = {
     warning: '#ff8c00',
     critical: '#ff3300',
   },
+  spring: {
+    id: 'spring',
+    name: 'Spring Blossom',
+    bg: '#050108',
+    cardTop: '#130a18',
+    cardBot: '#0d0612',
+    fold: '#050108',
+    divider: '#1a0d22',
+    digitColor: '#f9a8d4',
+    digitColorBot: '#e879b0',
+    labelColor: '#4a1a40',
+    resetColor: '#3a1230',
+    headerColor: '#f472b6',
+    offlineColor: '#2a0a1e',
+    accent: '#f472b6',
+    healthy: '#86efac',
+    warning: '#fde68a',
+    critical: '#f87171',
+  },
+  summer: {
+    id: 'summer',
+    name: 'Summer Neon',
+    bg: '#000a10',
+    cardTop: '#001828',
+    cardBot: '#00101c',
+    fold: '#000a10',
+    divider: '#00202e',
+    digitColor: '#22d3ee',
+    digitColorBot: '#0ea5e9',
+    labelColor: '#004455',
+    resetColor: '#003344',
+    headerColor: '#06b6d4',
+    offlineColor: '#002233',
+    accent: '#06b6d4',
+    healthy: '#34d399',
+    warning: '#fbbf24',
+    critical: '#f87171',
+  },
+  autumn: {
+    id: 'autumn',
+    name: 'Autumn Ember',
+    bg: '#080200',
+    cardTop: '#1c0a00',
+    cardBot: '#140700',
+    fold: '#080200',
+    divider: '#220c00',
+    digitColor: '#fb923c',
+    digitColorBot: '#ea580c',
+    labelColor: '#4a1a00',
+    resetColor: '#3a1200',
+    headerColor: '#f97316',
+    offlineColor: '#280e00',
+    accent: '#f97316',
+    healthy: '#a3e635',
+    warning: '#fbbf24',
+    critical: '#ef4444',
+  },
+  winter: {
+    id: 'winter',
+    name: 'Winter Ice',
+    bg: '#000408',
+    cardTop: '#070e18',
+    cardBot: '#040a12',
+    fold: '#000408',
+    divider: '#0a1220',
+    digitColor: '#bae6fd',
+    digitColorBot: '#7dd3fc',
+    labelColor: '#1e3a50',
+    resetColor: '#152c3d',
+    headerColor: '#7dd3fc',
+    offlineColor: '#0a1e2e',
+    accent: '#38bdf8',
+    healthy: '#34d399',
+    warning: '#fbbf24',
+    critical: '#f87171',
+  },
 };
 
-export const THEME_ORDER: ThemeId[] = ['classic', 'oled', 'fliqlo', 'terminal', 'amber'];
+export const THEME_ORDER: ThemeId[] = ['classic', 'oled', 'fliqlo', 'terminal', 'amber', 'spring', 'summer', 'autumn', 'winter'];
+
+export function getSeasonalTheme(): ThemeId {
+  const m = new Date().getMonth(); // 0-11
+  if (m >= 2 && m <= 4) return 'spring';   // Mar-May
+  if (m >= 5 && m <= 7) return 'summer';   // Jun-Aug
+  if (m >= 8 && m <= 10) return 'autumn';  // Sep-Nov
+  return 'winter';                          // Dec-Feb
+}
 
 export function getTheme(id: ThemeId): Theme {
   return THEMES[id] ?? THEMES.classic;
