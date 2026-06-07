@@ -40,3 +40,14 @@ jobs:
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: false
+
+      - name: Package screensaver (.scr)
+        run: npm run package-scr
+
+      - name: Upload .scr to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist-scr/ClawdClock.scr
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
