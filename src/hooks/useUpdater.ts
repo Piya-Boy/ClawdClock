@@ -23,6 +23,7 @@ export function useUpdater() {
   });
 
   const check = async () => {
+    if (import.meta.env.DEV) return;
     setState(s => ({ ...s, checking: true, error: null }));
     try {
       const result = await invoke<{ version: string; body: string | null } | null>('check_for_update');

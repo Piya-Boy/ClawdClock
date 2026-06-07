@@ -449,14 +449,17 @@ pub struct UpdateInfo {
 #[tauri::command]
 async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
     use tauri_plugin_updater::UpdaterExt;
-    let updater = app.updater().map_err(|e| e.to_string())?;
+    let updater = match app.updater() {
+        Ok(u) => u,
+        Err(_) => return Ok(None), // no signing key configured
+    };
     match updater.check().await {
         Ok(Some(update)) => Ok(Some(UpdateInfo {
             version: update.version.clone(),
             body: update.body.clone(),
         })),
         Ok(None) => Ok(None),
-        Err(e) => Err(e.to_string()),
+        Err(_) => Ok(None), // network error, endpoint unreachable — silent fail
     }
 }
 
