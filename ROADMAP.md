@@ -426,7 +426,7 @@ Target: Native Windows Integration
 
 * [x] Register as screensaver
 * [x] Screen Saver Settings integration
-* [ ] Windows installer integration
+* [x] Windows installer integration
 
 ---
 
