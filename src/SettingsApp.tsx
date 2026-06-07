@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import mascotGif from './assets/mascot.gif';
 import { TitleBar } from './components/Settings/TitleBar';
 import { SettingRow } from './components/Settings/SettingRow';
@@ -13,6 +14,7 @@ import { useUpdater } from './hooks/useUpdater';
 import { useUsageStore } from './stores/usageStore';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
+import { getVersion } from '@tauri-apps/api/app';
 import { THEMES, THEME_ORDER, getTheme } from './themes';
 import type { ThemeId } from './themes';
 import './styles/globals.css';
@@ -32,6 +34,9 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
   useClaudeUsage();
+
+  const [appVersion, setAppVersion] = useState('');
+  useEffect(() => { getVersion().then(setAppVersion).catch(() => {}); }, []);
 
   const {
     activateAfter, sleepAfter, timeFormat,
@@ -302,7 +307,7 @@ export function SettingsApp() {
         padding: '0 24px', gap: 8,
       }}>
         <div style={{ fontSize: 11, color: '#2a2a2a', fontFamily: FF, letterSpacing: '0.02em' }}>
-          ClawdClock v0.1.0
+          ClawdClock {appVersion ? `v${appVersion}` : ''}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
