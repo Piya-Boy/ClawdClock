@@ -4,7 +4,7 @@ const MASCOT_SIZE = 160;
 
 export function useBouncingMascot(speed: number = 1.8) {
   const ref = useRef<HTMLDivElement>(null);
-  const pos = useRef({ x: 80, y: 20 });
+  const pos = useRef({ x: 80, y: 10 });
   const vel = useRef({ x: speed, y: speed * 0.7 });
   const raf = useRef<number>(0);
   const speedRef = useRef(speed);
@@ -25,9 +25,10 @@ export function useBouncingMascot(speed: number = 1.8) {
       const el = ref.current;
       if (!el) return;
       const W = window.innerWidth;
-      const H = window.innerHeight;
       const p = pos.current;
       const v = vel.current;
+
+      const MAX_Y = MASCOT_SIZE; // stay in top strip
 
       p.x += v.x;
       p.y += v.y;
@@ -35,7 +36,7 @@ export function useBouncingMascot(speed: number = 1.8) {
       if (p.x <= 0)               { p.x = 0;                v.x =  Math.abs(v.x); }
       if (p.x >= W - MASCOT_SIZE) { p.x = W - MASCOT_SIZE; v.x = -Math.abs(v.x); }
       if (p.y <= 0)               { p.y = 0;                v.y =  Math.abs(v.y); }
-      if (p.y >= H - MASCOT_SIZE) { p.y = H - MASCOT_SIZE; v.y = -Math.abs(v.y); }
+      if (p.y >= MAX_Y)           { p.y = MAX_Y;            v.y = -Math.abs(v.y); }
 
       el.style.transform = `translate(${p.x}px, ${p.y}px)`;
       raf.current = requestAnimationFrame(tick);
