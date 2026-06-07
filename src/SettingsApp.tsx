@@ -56,10 +56,10 @@ export function SettingsApp() {
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, updateChannel, clockHotkey,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, autoUpdate, clockHotkey,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setUpdateChannel, setClockHotkey,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setAutoUpdate, setClockHotkey,
   } = useSettingsStore();
 
   const {
@@ -278,11 +278,6 @@ export function SettingsApp() {
           )}
 
           <SettingRow
-            label="Hide Taskbar"
-            desc="Hide the Windows taskbar while ClawdClock is active."
-            control={<Toggle value={hideTaskbar} onChange={setHideTaskbar} />}
-          />
-          <SettingRow
             label="Clock Hotkey"
             desc="Global shortcut to show/hide the clock."
             control={
@@ -324,33 +319,6 @@ export function SettingsApp() {
             desc="Check for updates automatically."
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
           />
-
-          {autoUpdate && (
-            <>
-              <SettingRow
-                label="Update Channel"
-                desc="Stable for releases, Beta for pre-releases."
-                control={
-                  <SegControl
-                    value={updateChannel}
-                    options={[{ val: 'stable', label: 'Stable' }, { val: 'beta', label: 'Beta' }, { val: 'dev', label: 'Dev' }]}
-                    onChange={v => setUpdateChannel(v as any)}
-                  />
-                }
-              />
-              <SettingRow
-                label="Check Frequency"
-                desc="How often to check for updates."
-                control={
-                  <Dropdown
-                    value={checkFrequency}
-                    options={['On Startup', '1 minute', '5 minutes', '30 minutes', '1 hour']}
-                    onChange={v => setCheckFrequency(v as any)}
-                  />
-                }
-              />
-            </>
-          )}
 
           {/* Preview Now */}
           <button
