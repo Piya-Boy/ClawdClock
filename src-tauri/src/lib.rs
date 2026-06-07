@@ -280,22 +280,7 @@ fn set_autostart(enable: bool) -> Result<(), String> {
 fn set_lock_screen(app: tauri::AppHandle, locked: bool) -> Result<(), String> {
     let win = app.get_webview_window("clock")
         .ok_or("clock window not found")?;
-
-    if locked {
-        win.set_always_on_top(true).map_err(|e| e.to_string())?;
-        #[cfg(target_os = "windows")]
-        unsafe {
-            use windows_sys::Win32::UI::Input::KeyboardAndMouse::BlockInput;
-            BlockInput(1);
-        }
-    } else {
-        win.set_always_on_top(false).map_err(|e| e.to_string())?;
-        #[cfg(target_os = "windows")]
-        unsafe {
-            use windows_sys::Win32::UI::Input::KeyboardAndMouse::BlockInput;
-            BlockInput(0);
-        }
-    }
+    win.set_always_on_top(locked).map_err(|e| e.to_string())?;
     Ok(())
 }
 

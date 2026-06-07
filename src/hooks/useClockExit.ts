@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const MOUSE_THRESHOLD_PX = 8;
@@ -7,10 +6,12 @@ const DEBOUNCE_MS = 150;
 const GRACE_MS = 800;
 const IS_DEV = import.meta.env.DEV;
 
-export function useClockExit() {
+export function useClockExit(onDismiss: () => void) {
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const lastFired = useRef(0);
   const shownAt = useRef(0);
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
 
   const resetGrace = () => {
     shownAt.current = Date.now();
@@ -20,7 +21,6 @@ export function useClockExit() {
   useEffect(() => {
     resetGrace();
 
-    // Reset grace + startPos every time this window gains focus (i.e. becomes visible again)
     const win = getCurrentWindow();
     let unlisten: (() => void) | undefined;
     win.onFocusChanged(({ payload: focused }) => {
@@ -32,7 +32,7 @@ export function useClockExit() {
       const now = Date.now();
       if (now - lastFired.current < DEBOUNCE_MS) return;
       lastFired.current = now;
-      invoke('hide_clock_window').catch(() => {});
+      onDismissRef.current();
     };
 
     const onMouseMove = (e: MouseEvent) => {

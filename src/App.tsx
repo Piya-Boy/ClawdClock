@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { ClawdClockView } from './components/ClawdClockView/ClawdClockView';
 import { BouncingMascot } from './components/ClawdMascot/BouncingMascot';
 import { EscapeBar } from './components/EscapeBar/EscapeBar';
+import { PasswordPrompt } from './components/PasswordPrompt/PasswordPrompt';
 import { useClock } from './hooks/useClock';
 import { useScale } from './hooks/useScale';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
@@ -10,6 +12,7 @@ import { useUsageStore } from './stores/usageStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { getTheme } from './themes';
 import { useOledShift } from './hooks/useOledShift';
+import { invoke } from '@tauri-apps/api/core';
 import './styles/globals.css';
 
 const IS_DEV = import.meta.env.DEV;
@@ -17,14 +20,26 @@ const IS_DEV = import.meta.env.DEV;
 export function App() {
   const now   = useClock();
   const scale = useScale(1920, 1080);
+  const [promptVisible, setPromptVisible] = useState(false);
 
   useClaudeUsage();
-  useClockExit();
 
-  const { lockScreenEnabled, theme: themeId, oledMode, timeFormat } = useSettingsStore();
+  const { lockScreenEnabled, lockPassword, theme: themeId, oledMode, timeFormat } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
   const escapeBar = useEscapeBar();
   const theme = getTheme(themeId);
+
+  const needsPassword = lockScreenEnabled && lockPassword.length > 0;
+
+  const handleDismiss = () => {
+    if (needsPassword) {
+      setPromptVisible(true);
+    } else {
+      invoke('hide_clock_window').catch(() => {});
+    }
+  };
+
+  useClockExit(handleDismiss);
 
   const {
     sessionPct, weeklyPct,
@@ -48,7 +63,18 @@ export function App() {
           onKeepAlive={escapeBar.keepAlive}
           onHide={escapeBar.hide}
           lockScreenEnabled={lockScreenEnabled}
-          lockPassword=""
+          lockPassword={lockPassword}
+        />
+      )}
+
+      {promptVisible && (
+        <PasswordPrompt
+          validate={input => input === lockPassword}
+          onSuccess={() => {
+            setPromptVisible(false);
+            invoke('hide_clock_window').catch(() => {});
+          }}
+          onCancel={() => setPromptVisible(false)}
         />
       )}
 
@@ -63,8 +89,8 @@ export function App() {
         <ClawdClockView
           hours={now.getHours()}
           minutes={now.getMinutes()}
-          theme={theme}
           timeFormat={timeFormat}
+          theme={theme}
           sessionPct={sessionPct}
           weeklyPct={weeklyPct}
           sessionCountdown={sessionCountdown}
