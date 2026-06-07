@@ -487,7 +487,7 @@ Target: Professional Setup
 * [ ] Landing Page
 * [ ] Download Page
 * [ ] Screenshots
-* [ ] Changelog
+* [x] Changelog
 
 ---
 
@@ -495,12 +495,11 @@ Target: Professional Setup
 
 ## Integrations
 
-* [ ] GitHub Activity
-* [ ] GitHub Contributions
+* [x] GitHub Activity
+* [x] GitHub Contributions
 * [ ] CI/CD Status
 * [x] Ollama Usage
-* [ ] OpenAI Usage
-* [ ] Gemini Usage
+
 
 ## Fun Features
 
@@ -541,7 +540,7 @@ Target: Seamless Updates
 ### Release Notes
 
 * [x] Show changelog before update
-* [ ] Show release version
+* [x] Show release version
 * [ ] Show update size
 
 ### Failure Handling

@@ -13,6 +13,9 @@ import { useMonitors } from './hooks/useMonitors';
 import { useUpdater } from './hooks/useUpdater';
 import { useSystemDefaults } from './hooks/useSystemDefaults';
 import { useOllamaStatus } from './hooks/useOllamaStatus';
+import { useChangelog } from './hooks/useChangelog';
+import { useGitHubContributions } from './hooks/useGitHubContributions';
+import { ChangelogPanel } from './components/Settings/ChangelogPanel';
 import { useUsageStore } from './stores/usageStore';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
@@ -39,15 +42,18 @@ export function SettingsApp() {
   useSystemDefaults();
 
   const [appVersion, setAppVersion] = useState('');
+  const [showChangelog, setShowChangelog] = useState(false);
   useEffect(() => { getVersion().then(setAppVersion).catch(() => {}); }, []);
+
+  const changelog = useChangelog();
 
   const {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode, lockPassword,
-    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency,
+    launchAtStartup, selectedMonitor, lockScreenEnabled, hideTaskbar, autoUpdate, checkFrequency, githubUsername,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode, setLockPassword,
-    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency,
+    setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setHideTaskbar, setAutoUpdate, setCheckFrequency, setGithubUsername,
   } = useSettingsStore();
 
   const {
@@ -60,11 +66,16 @@ export function SettingsApp() {
   const monitors = useMonitors();
   const updater = useUpdater();
   const ollama = useOllamaStatus();
+  const github = useGitHubContributions(githubUsername || null);
 
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
   const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.healthy;
 
   return (
+    <>
+    {showChangelog && changelog.releases.length > 0 && (
+      <ChangelogPanel releases={changelog.releases} onClose={() => setShowChangelog(false)} />
+    )}
     <div style={{
       position: 'fixed', inset: 0,
       background: '#0d0d0d',
@@ -252,6 +263,27 @@ export function SettingsApp() {
             desc="Check for updates automatically."
             control={<Toggle value={autoUpdate} onChange={setAutoUpdate} />}
           />
+          <SettingRow
+            label="GitHub Username"
+            desc="Show contribution heatmap on the clock display."
+            control={
+              <input
+                type="text"
+                value={githubUsername}
+                onChange={e => setGithubUsername(e.target.value)}
+                placeholder="your-username"
+                autoComplete="off"
+                style={{
+                  width: 160, padding: '7px 10px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: 6, outline: 'none',
+                  color: '#ccc', fontFamily: FF, fontSize: 13,
+                }}
+              />
+            }
+          />
+
           {autoUpdate && (
             <SettingRow
               label="Check Frequency"
@@ -323,6 +355,8 @@ export function SettingsApp() {
               lastUpdated={lastUpdated}
               ollamaAvailable={ollama.available}
               ollamaRunning={ollama.running}
+              githubUsername={githubUsername}
+              githubDays={github.days}
             />
           </div>
         </div>
@@ -336,8 +370,23 @@ export function SettingsApp() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 24px', gap: 8,
       }}>
-        <div style={{ fontSize: 11, color: '#2a2a2a', fontFamily: FF, letterSpacing: '0.02em' }}>
-          ClawdClock {appVersion ? `v${appVersion}` : ''}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 11, color: '#2a2a2a', fontFamily: FF, letterSpacing: '0.02em' }}>
+            ClawdClock {appVersion ? `v${appVersion}` : ''}
+          </div>
+          {changelog.releases.length > 0 && (
+            <button
+              onClick={() => setShowChangelog(true)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 11, color: '#383838', fontFamily: FF,
+                padding: 0, letterSpacing: '0.02em',
+                textDecoration: 'underline', textDecorationColor: '#282828',
+              }}
+            >
+              Changelog
+            </button>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -399,6 +448,7 @@ export function SettingsApp() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

@@ -36,6 +36,7 @@ export interface SettingsState {
   hideTaskbar: boolean;
   autoUpdate: boolean;
   checkFrequency: CheckFrequencyOption;
+  githubUsername: string;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -48,6 +49,7 @@ export interface SettingsState {
   setHideTaskbar: (v: boolean) => void;
   setAutoUpdate: (v: boolean) => void;
   setCheckFrequency: (v: CheckFrequencyOption) => void;
+  setGithubUsername: (v: string) => void;
 }
 
 export interface UsageData {

@@ -1,9 +1,11 @@
 import { FlipClock } from '../FlipClock/FlipClock';
 import { UsageSection } from '../UsagePanel/UsageSection';
 import { OllamaSection } from '../OllamaPanel/OllamaSection';
+import { ContributionGrid } from '../GitHubPanel/ContributionGrid';
 import { formatTimeAgo } from '../../utils/countdown';
 import type { Theme } from '../../themes';
 import type { OllamaModel } from '../../hooks/useOllamaStatus';
+import type { ContributionDay } from '../../hooks/useGitHubContributions';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -22,6 +24,8 @@ interface Props {
   lastUpdated: Date | null;
   ollamaAvailable?: boolean;
   ollamaRunning?: OllamaModel[];
+  githubUsername?: string;
+  githubDays?: ContributionDay[];
 }
 
 export function ClawdClockView({
@@ -32,6 +36,8 @@ export function ClawdClockView({
   error, lastUpdated,
   ollamaAvailable = false,
   ollamaRunning = [],
+  githubUsername = '',
+  githubDays = [],
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
@@ -87,6 +93,12 @@ export function ClawdClockView({
           <>
             <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
             <OllamaSection available={ollamaAvailable} running={ollamaRunning} theme={theme} />
+          </>
+        )}
+        {githubUsername && githubDays.length > 0 && (
+          <>
+            <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
+            <ContributionGrid days={githubDays} username={githubUsername} theme={theme} />
           </>
         )}
       </div>

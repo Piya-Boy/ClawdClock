@@ -19,6 +19,7 @@ export const useSettingsStore = create<SettingsState>()(
       hideTaskbar: false,
       autoUpdate: true,
       checkFrequency: '5 minutes' as CheckFrequencyOption,
+      githubUsername: '',
       setActivateAfter: (v: ActivateAfterOption) => set({ activateAfter: v }),
       setSleepAfter: (v: SleepAfterOption) => set({ sleepAfter: v }),
       setTimeFormat: (v: TimeFormat) => set({ timeFormat: v }),
@@ -34,6 +35,7 @@ export const useSettingsStore = create<SettingsState>()(
       setHideTaskbar: (v: boolean) => set({ hideTaskbar: v }),
       setAutoUpdate: (v: boolean) => set({ autoUpdate: v }),
       setCheckFrequency: (v: CheckFrequencyOption) => set({ checkFrequency: v }),
+      setGithubUsername: (v: string) => set({ githubUsername: v }),
     }),
     { name: 'clawdclock-settings' }
   )
