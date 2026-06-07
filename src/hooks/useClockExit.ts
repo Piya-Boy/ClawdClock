@@ -36,7 +36,12 @@ export function useClockExit(onRequestUnlock?: () => void) {
       if (dx > MOUSE_THRESHOLD_PX || dy > MOUSE_THRESHOLD_PX) dismiss();
     };
 
-    const onKeyDown = () => dismiss();
+    const onKeyDown = (e: KeyboardEvent) => {
+      // EscapeBar handles these keys — don't double-fire
+      if (e.key === 'Escape' || e.key === 'F11') return;
+      if ((e.ctrlKey || e.metaKey) && e.key === ',') return;
+      dismiss();
+    };
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('keydown', onKeyDown);

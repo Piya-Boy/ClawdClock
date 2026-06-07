@@ -4,10 +4,12 @@ import { FlipClock } from './components/FlipClock/FlipClock';
 import { BouncingMascot } from './components/ClawdMascot/BouncingMascot';
 import { UsageSection } from './components/UsagePanel/UsageSection';
 import { PasswordPrompt } from './components/PasswordPrompt/PasswordPrompt';
+import { EscapeBar } from './components/EscapeBar/EscapeBar';
 import { useClock } from './hooks/useClock';
 import { useScale } from './hooks/useScale';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { useClockExit } from './hooks/useClockExit';
+import { useEscapeBar } from './hooks/useEscapeBar';
 import { useUsageStore } from './stores/usageStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { formatTimeAgo } from './utils/countdown';
@@ -130,6 +132,8 @@ export function App() {
   }, []);
   const handleUnlockCancel = useCallback(() => setShowPasswordPrompt(false), []);
 
+  const escapeBar = useEscapeBar();
+
   useClockExit(lockPassword ? handleRequestUnlock : undefined);
   const theme = getTheme(themeId);
 
@@ -155,6 +159,16 @@ export function App() {
           validate={(input) => input === lockPassword}
         />
       )}
+
+      <EscapeBar
+        visible={escapeBar.visible}
+        now={now}
+        onKeepAlive={escapeBar.keepAlive}
+        onHide={escapeBar.hide}
+        onRequestUnlock={lockPassword ? handleRequestUnlock : undefined}
+        lockScreenEnabled={lockScreenEnabled}
+        lockPassword={lockPassword}
+      />
 
       <BouncingMascot />
 
