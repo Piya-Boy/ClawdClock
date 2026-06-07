@@ -11,6 +11,7 @@ import { useSettingsStore } from './stores/settingsStore';
 import { useIdleDetection } from './hooks/useIdleDetection';
 import { useMonitors } from './hooks/useMonitors';
 import { useUpdater } from './hooks/useUpdater';
+import { useSystemDefaults } from './hooks/useSystemDefaults';
 import { useUsageStore } from './stores/usageStore';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { invoke } from '@tauri-apps/api/core';
@@ -34,6 +35,7 @@ export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
   useClaudeUsage();
+  useSystemDefaults();
 
   const [appVersion, setAppVersion] = useState('');
   useEffect(() => { getVersion().then(setAppVersion).catch(() => {}); }, []);

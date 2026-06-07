@@ -243,6 +243,61 @@ fn get_idle_seconds() -> u32 {
     0
 }
 
+/* ── System Defaults ────────────────────────────────────────── */
+
+// Returns screensaver timeout in seconds from Windows registry, or 300 if unavailable.
+#[tauri::command]
+fn get_system_screensaver_timeout() -> u32 {
+    #[cfg(target_os = "windows")]
+    {
+        let out = std::process::Command::new("reg")
+            .args(["query", r"HKCU\Control Panel\Desktop", "/v", "ScreenSaveTimeOut"])
+            .output();
+        if let Ok(o) = out {
+            let s = String::from_utf8_lossy(&o.stdout);
+            for line in s.lines() {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 3 && parts[0] == "ScreenSaveTimeOut" {
+                    if let Ok(n) = parts[2].parse::<u32>() {
+                        return n;
+                    }
+                }
+            }
+        }
+        300
+    }
+    #[cfg(not(target_os = "windows"))]
+    300
+}
+
+// Returns monitor sleep timeout in seconds (AC power), or 0 (Never) if unavailable.
+#[tauri::command]
+fn get_system_sleep_timeout() -> u32 {
+    #[cfg(target_os = "windows")]
+    {
+        let out = std::process::Command::new("powercfg")
+            .args(["/query", "SCHEME_CURRENT", "SUB_SLEEP", "STANDBYIDLE"])
+            .output();
+        if let Ok(o) = out {
+            let s = String::from_utf8_lossy(&o.stdout);
+            for line in s.lines() {
+                let trimmed = line.trim();
+                if trimmed.starts_with("Current AC Power Setting Index:") {
+                    if let Some(hex) = trimmed.split(':').nth(1) {
+                        let hex = hex.trim().trim_start_matches("0x");
+                        if let Ok(n) = u32::from_str_radix(hex, 16) {
+                            return n;
+                        }
+                    }
+                }
+            }
+        }
+        0
+    }
+    #[cfg(not(target_os = "windows"))]
+    0
+}
+
 /* ── Autostart ──────────────────────────────────────────────── */
 
 #[tauri::command]
@@ -539,6 +594,8 @@ pub fn run_with_mode(mode: ScrMode) {
             hide_clock_all_monitors,
             set_lock_screen,
             register_screensaver,
+            get_system_screensaver_timeout,
+            get_system_sleep_timeout,
             check_for_update,
             install_update,
         ])
