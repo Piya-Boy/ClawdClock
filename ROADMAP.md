@@ -444,11 +444,7 @@ Target: Personalization
 
 ## Layouts
 
-* [x] Vertical layout
-* [x] Horizontal layout
-* [x] Compact layout
-* [x] Minimal layout
-* [x] Ultra Minimal layout
+* [ ] Layouts removed — single horizontal layout only
 
 ---
 
@@ -515,6 +511,83 @@ Target: Professional Setup
 * [ ] Achievement System
 
 ---
+
+# phase 8
+
+## Auto Update
+
+Target: Seamless Updates
+
+### Update Detection
+
+* [x] Check for updates on startup
+* [x] Check for updates in background
+* [x] Manual check for updates
+* [x] Display current version
+
+### Update Channels
+
+* [x] Stable channel (GitHub releases)
+* [ ] Beta channel
+* [ ] Development channel
+
+### Update Experience
+
+* [x] Download update automatically
+* [x] Notify when update is ready
+* [x] One-click restart and update
+* [x] Silent background download
+
+### Release Notes
+
+* [ ] Show changelog before update
+* [ ] Show release version
+* [ ] Show update size
+
+### Failure Handling
+
+* [ ] Rollback support
+* [x] Failed update recovery (error shown in UI)
+* [x] Network error handling
+
+### Platform Support
+
+* [x] Windows auto update
+* [ ] macOS auto update
+* [ ] Linux update notification
+
+### Settings
+
+* [ ] Enable Auto Update
+* [ ] Check Frequency
+* [ ] Update Channel Selection
+* [ ] Download Updates Automatically
+
+### Tauri Integration
+
+* [x] Tauri Updater Plugin
+* [x] GitHub Releases Integration
+* [x] Signed Update Packages
+* [x] Update Verification
+
+### User Experience
+
+Behavior:
+
+App Starts
+↓
+Check Latest Version
+↓
+New Version Found
+↓
+Download In Background
+↓
+Show Notification
+↓
+Restart To Update
+
+No manual installer required.
+
 
 # Tech Stack
 
