@@ -90,11 +90,15 @@ ClawdClock isn't code-signed yet, so Windows SmartScreen or **Smart App Control 
   ```
 
 **Smart App Control blocks it outright** (no "Run anyway" button):
-SAC checks publisher reputation, not just the download flag, so unblocking the file isn't enough. Check whether SAC is enforced:
+SAC checks publisher reputation, not just the download flag, so unblocking the file isn't enough. Check whether SAC is enforced — run this in **PowerShell** (not Command Prompt):
 ```powershell
 (Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy").VerifiedAndReputablePolicyState
 # 0 = off, 1 = enforced, 2 = evaluation
 ```
+> Using Command Prompt (cmd) instead? Wrap it so PowerShell runs the query:
+> ```
+> powershell -Command "(Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy').VerifiedAndReputablePolicyState"
+> ```
 If it returns `1`, the only way to run an unsigned app is to turn SAC off:
 > **Settings → Privacy & security → Windows Security → App & browser control → Smart App Control settings → Off**
 
