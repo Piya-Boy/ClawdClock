@@ -329,6 +329,35 @@ fn get_idle_seconds() -> u32 {
     0
 }
 
+/// Keep the display + system awake while the clock is showing, so Windows'
+/// own idle timer doesn't fire the lock screen / monitor sleep on top of us.
+///
+/// ES_CONTINUOUS makes the state sticky until we clear it (vs a one-shot
+/// timer reset). ES_DISPLAY_REQUIRED blocks the screensaver + monitor sleep;
+/// ES_SYSTEM_REQUIRED blocks system sleep. Note: this does NOT block an
+/// explicit lock (Win+L) or a Group Policy lock — only the idle-triggered one.
+#[tauri::command]
+fn set_keep_awake(on: bool) {
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::System::Power::SetThreadExecutionState;
+        use windows_sys::Win32::System::Power::{
+            ES_CONTINUOUS, ES_DISPLAY_REQUIRED, ES_SYSTEM_REQUIRED,
+        };
+        unsafe {
+            if on {
+                SetThreadExecutionState(
+                    ES_CONTINUOUS | ES_DISPLAY_REQUIRED | ES_SYSTEM_REQUIRED,
+                );
+            } else {
+                SetThreadExecutionState(ES_CONTINUOUS);
+            }
+        }
+    }
+    #[cfg(not(target_os = "windows"))]
+    let _ = on;
+}
+
 /* ── System Defaults ────────────────────────────────────────── */
 
 // Returns screensaver timeout in seconds from Windows registry, or 300 if unavailable.
@@ -909,6 +938,7 @@ pub fn run_with_mode(mode: ScrMode) {
             hide_clock_window,
             fetch_claude_usage,
             get_idle_seconds,
+            set_keep_awake,
             set_autostart,
             list_monitors,
             show_clock_on_monitor,

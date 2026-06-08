@@ -4,6 +4,7 @@ import { useClock } from './hooks/useClock';
 import { useScale } from './hooks/useScale';
 import { useClaudeUsage } from './hooks/useClaudeUsage';
 import { useClockExit } from './hooks/useClockExit';
+import { useKeepAwake } from './hooks/useKeepAwake';
 import { useUsageStore } from './stores/usageStore';
 import { useSettingsStore } from './stores/settingsStore';
 import { getTheme } from './themes';
@@ -15,6 +16,7 @@ export function App() {
   const now   = useClock();
   const scale = useScale(1920, 1080);
   useClaudeUsage();
+  useKeepAwake();
 
   const { lockScreenEnabled, theme: themeId, oledMode, timeFormat } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
