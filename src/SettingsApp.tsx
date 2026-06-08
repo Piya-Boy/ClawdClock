@@ -39,7 +39,15 @@ const PREVIEW_SCALE = Math.min(PREVIEW_W / 1920, PREVIEW_H / 1080);
 const C_ACC  = '#FF6B3D';
 const FF     = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
-// Human-readable age of a unix-seconds timestamp, e.g. "3m ago", "2h ago".
+// Map a raw fetch error to a short, human reason for the footer so a user on
+// another machine can tell *why* usage is missing (not just "unavailable").
+function usageReason(error: string): string {
+  if (/credentials not found|log in/i.test(error)) return 'not logged in';
+  if (/rate limit|429/i.test(error)) return 'rate limited';
+  if (/network error|offline/i.test(error)) return 'offline';
+  return 'unavailable';
+}
+
 export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
@@ -346,7 +354,7 @@ export function SettingsApp() {
               cursor: error ? 'help' : 'default',
             }}
           >
-            {error ? 'Usage: unavailable' : 'Usage: live'}
+            {error ? `Usage: ${usageReason(error)}` : 'Usage: live'}
           </span>
           {changelog.releases.length > 0 && (
             <button
