@@ -39,6 +39,16 @@ const PREVIEW_SCALE = Math.min(PREVIEW_W / 1920, PREVIEW_H / 1080);
 const C_ACC  = '#FF6B3D';
 const FF     = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
+// Human-readable age of a unix-seconds timestamp, e.g. "3m ago", "2h ago".
+function formatAge(unixSeconds: number): string {
+  if (!unixSeconds) return 'unknown';
+  const sec = Math.max(0, Math.floor(Date.now() / 1000) - unixSeconds);
+  if (sec < 60) return `${sec}s ago`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+  return `${Math.floor(sec / 86400)}d ago`;
+}
+
 export function SettingsApp() {
   const now = useClock();
   useIdleDetection();
@@ -64,7 +74,7 @@ export function SettingsApp() {
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
-    error,
+    error, dataSource, fetchedAt, diagnostic,
   } = useUsageStore();
 
   const theme = getTheme(themeId);
@@ -320,6 +330,7 @@ export function SettingsApp() {
               sessionColor={sessionColor}
               weeklyColor={weeklyColor}
               error={error}
+              dataSource={dataSource}
             />
           </div>
         </div>
@@ -337,6 +348,18 @@ export function SettingsApp() {
           <div style={{ fontSize: 11, color: '#2a2a2a', fontFamily: FF, letterSpacing: '0.02em' }}>
             ClawdClock {appVersion ? `v${appVersion}` : ''}
           </div>
+          <span
+            title={diagnostic ?? undefined}
+            style={{
+              fontSize: 11, fontFamily: FF, letterSpacing: '0.02em',
+              color: dataSource === 'cached' ? theme.warning : '#2a2a2a',
+              cursor: diagnostic ? 'help' : 'default',
+            }}
+          >
+            {dataSource === 'cached'
+              ? `Usage: cached${fetchedAt ? ` (${formatAge(fetchedAt)})` : ''}`
+              : 'Usage: live'}
+          </span>
           {changelog.releases.length > 0 && (
             <button
               onClick={() => setShowChangelog(true)}

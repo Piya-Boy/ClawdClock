@@ -147,6 +147,40 @@ pub struct UsageResult {
     pub weekly_usage: f64,
     pub session_resets_at: String,
     pub weekly_resets_at: String,
+    /// "live" = fresh from API, "cached" = stale fallback after a failure.
+    #[serde(default = "default_source")]
+    pub data_source: String,
+    /// Unix seconds when this data was fetched from the API. Lets the UI show
+    /// how stale a cached value is.
+    #[serde(default)]
+    pub fetched_at: u64,
+    /// Present only when the live fetch failed and we fell back to cache.
+    /// Surfaces the real error instead of silently showing old numbers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diagnostic: Option<String>,
+}
+
+fn default_source() -> String {
+    "cached".to_string()
+}
+
+fn now_unix() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+/// Load cache and tag it as a stale fallback, attaching the failure reason.
+fn cached_fallback(app: &tauri::AppHandle, reason: String) -> Result<UsageResult, String> {
+    match load_usage_cache(app) {
+        Some(mut c) => {
+            c.data_source = "cached".to_string();
+            c.diagnostic = Some(reason);
+            Ok(c)
+        }
+        None => Err(reason),
+    }
 }
 
 fn usage_cache_path(app: &tauri::AppHandle) -> std::path::PathBuf {
@@ -175,10 +209,7 @@ fn load_usage_cache(app: &tauri::AppHandle) -> Option<UsageResult> {
 async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String> {
     let token = match read_access_token() {
         Ok(t) => t,
-        Err(e) => {
-            return load_usage_cache(&app)
-                .ok_or_else(|| e);
-        }
+        Err(e) => return cached_fallback(&app, e),
     };
 
     let client = reqwest::Client::builder()
@@ -194,27 +225,34 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
 
     let resp = match resp {
         Ok(r) => r,
-        Err(e) => {
-            return load_usage_cache(&app)
-                .ok_or_else(|| format!("network error: {e}"));
-        }
+        Err(e) => return cached_fallback(&app, format!("network error: {e}")),
     };
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
         let body = resp.text().await.unwrap_or_default();
-        return load_usage_cache(&app)
-            .ok_or_else(|| format!("API error {status}: {body}"));
+        let truncated: String = body.chars().take(200).collect();
+        return cached_fallback(&app, format!("API error {status}: {truncated}"));
     }
 
-    let data: UsageResponse = resp.json().await
-        .map_err(|e| format!("parse error: {e}"))?;
+    let body = resp.text().await
+        .map_err(|e| format!("read error: {e}"))?;
+    let data: UsageResponse = match serde_json::from_str(&body) {
+        Ok(d) => d,
+        Err(e) => {
+            let truncated: String = body.chars().take(200).collect();
+            return cached_fallback(&app, format!("parse error: {e} — body: {truncated}"));
+        }
+    };
 
     let result = UsageResult {
         session_usage: data.five_hour.utilization,
         weekly_usage: data.seven_day.utilization,
         session_resets_at: data.five_hour.resets_at,
         weekly_resets_at: data.seven_day.resets_at,
+        data_source: "live".to_string(),
+        fetched_at: now_unix(),
+        diagnostic: None,
     };
 
     save_usage_cache(&app, &result);
@@ -509,10 +547,17 @@ fn register_screensaver() -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
         let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-        let exe_str = exe.to_string_lossy().to_string();
+        // Windows' Screen Saver dialog only previews/configures *.scr files, so
+        // register a .scr copy beside the exe rather than the exe itself.
+        let scr = exe.with_extension("scr");
+        if !scr.exists() {
+            let _ = fs::copy(&exe, &scr);
+        }
+        let target = if scr.exists() { scr } else { exe };
+        let target_str = target.to_string_lossy().to_string();
         std::process::Command::new("reg")
             .args(["add", r"HKCU\Control Panel\Desktop",
-                   "/v", "SCRNSAVE.EXE", "/t", "REG_SZ", "/d", &exe_str, "/f"])
+                   "/v", "SCRNSAVE.EXE", "/t", "REG_SZ", "/d", &target_str, "/f"])
             .output()
             .map_err(|e| e.to_string())?;
         std::process::Command::new("reg")
@@ -663,8 +708,61 @@ pub fn run() {
     run_with_mode(ScrMode::Config);
 }
 
+/// Bring the settings window to the foreground (used on startup and when a
+/// second instance is launched with /c by the Screen Saver Settings dialog).
+fn surface_settings_window(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.unminimize();
+        let _ = w.show();
+        let _ = w.set_focus();
+        let _ = w.set_always_on_top(true);
+        let wc = w.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(400));
+            let _ = wc.set_always_on_top(false);
+        });
+    }
+}
+
+/// Parse a screensaver mode out of a raw argv (shared with main.rs logic).
+pub fn mode_from_args(args: &[String]) -> ScrMode {
+    for (i, arg) in args.iter().enumerate() {
+        let a = arg.to_lowercase();
+        let a = a.trim_start_matches('-').trim_start_matches('/');
+        if a == "s" || a.starts_with("s:") {
+            return ScrMode::Screensaver;
+        }
+        if a == "p" || a.starts_with("p:") {
+            let hwnd = if a == "p" {
+                args.get(i + 1).and_then(|v| v.parse::<u64>().ok()).unwrap_or(0)
+            } else {
+                a.trim_start_matches("p:").parse::<u64>().unwrap_or(0)
+            };
+            return ScrMode::Preview(hwnd);
+        }
+        if a == "c" || a.starts_with("c:") {
+            return ScrMode::Config;
+        }
+    }
+    ScrMode::Config
+}
+
 pub fn run_with_mode(mode: ScrMode) {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            // A second launch reached us instead of starting a new process.
+            // React to its args: /c → settings, /s → clock, /p → ignore.
+            match mode_from_args(&argv) {
+                ScrMode::Screensaver => {
+                    if let Some(win) = app.get_webview_window("clock") {
+                        let _ = win.show();
+                        let _ = win.set_focus();
+                    }
+                }
+                ScrMode::Preview(_) => {}
+                ScrMode::Config => surface_settings_window(app),
+            }
+        }))
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -714,12 +812,11 @@ pub fn run_with_mode(mode: ScrMode) {
                     .build(app)?;
             }
 
-            // Show settings window on startup (Config mode)
+            // Show settings window on startup (Config mode).
+            // Launched standalone OR via Screen Saver Settings dialog ("Settings…"
+            // button runs the .scr with /c). Force it above the dialog.
             if mode == ScrMode::Config {
-                if let Some(w) = app.get_webview_window("settings") {
-                    let _ = w.show();
-                    let _ = w.set_focus();
-                }
+                surface_settings_window(&app.handle().clone());
             }
 
             // Global hotkey only when not in screensaver/preview mode

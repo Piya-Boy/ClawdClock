@@ -16,6 +16,7 @@ interface Props {
   sessionColor: string;
   weeklyColor: string;
   error: string | null;
+  dataSource?: 'live' | 'cached';
 }
 
 export function ClawdClockView({
@@ -23,11 +24,16 @@ export function ClawdClockView({
   sessionPct, weeklyPct,
   sessionCountdown, weeklyCountdown,
   sessionColor, weeklyColor,
-  error,
+  error, dataSource,
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
   const ampm = timeFormat === '12' ? (rawH >= 12 ? 'PM' : 'AM') : undefined;
+  const notLoggedIn = !!error && /credentials not found|log in/i.test(error);
+  // Stale cache: we have numbers but a live refresh failed. Distinct from a
+  // hard offline/no-data state.
+  const stale = !notLoggedIn && (dataSource === 'cached' || (!!error && !notLoggedIn));
+  const badge = notLoggedIn ? 'NOT LOGGED IN' : stale ? 'CACHED' : 'OFFLINE';
   return (
     <div style={{
       width: 1920, height: 1080,
@@ -63,18 +69,31 @@ export function ClawdClockView({
           </div>
           {error && (
             <div style={{
-              fontSize: 22, fontWeight: 600,
-              color: theme.critical,
-              fontFamily: FF, letterSpacing: '0.08em',
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
               alignSelf: 'flex-end', marginBottom: 4,
             }}>
-              OFFLINE
+              <div style={{
+                fontSize: 22, fontWeight: 600,
+                color: stale ? theme.warning : theme.critical,
+                fontFamily: FF, letterSpacing: '0.08em',
+              }}>
+                {badge}
+              </div>
+              {notLoggedIn && (
+                <div style={{
+                  fontSize: 16, fontWeight: 500,
+                  color: theme.headerColor, opacity: 0.7,
+                  fontFamily: FF, letterSpacing: '0.04em', marginTop: 6,
+                }}>
+                  run: claude auth login
+                </div>
+              )}
             </div>
           )}
         </div>
         <UsageSection label="SESSION (5H)" pct={sessionPct} color={sessionColor} resetIn={sessionCountdown} theme={theme} />
         <div style={{ height: 1, background: theme.divider, margin: '70px 0' }} />
-        <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} resetLabel="RESETS" theme={theme} />
+        <UsageSection label="WEEKLY (7D)" pct={weeklyPct} color={weeklyColor} resetIn={weeklyCountdown} theme={theme} />
       </div>
     </div>
   );

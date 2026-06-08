@@ -7,6 +7,9 @@ interface RawUsageResult {
   weekly_usage: number;
   session_resets_at: string;
   weekly_resets_at: string;
+  data_source?: 'live' | 'cached';
+  fetched_at?: number;
+  diagnostic?: string | null;
 }
 
 export async function fetchUsage(): Promise<UsageData> {
@@ -19,5 +22,8 @@ export async function fetchUsage(): Promise<UsageData> {
     weeklyResetAt: raw.weekly_resets_at,
     sessionCountdown: formatCountdown(raw.session_resets_at),
     weeklyCountdown: formatCountdown(raw.weekly_resets_at),
+    dataSource: raw.data_source === 'cached' ? 'cached' : 'live',
+    fetchedAt: raw.fetched_at ?? 0,
+    diagnostic: raw.diagnostic ?? null,
   };
 }

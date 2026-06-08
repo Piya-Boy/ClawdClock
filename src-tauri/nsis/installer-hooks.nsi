@@ -2,13 +2,13 @@
 ; Runs after main installation to register as Windows screensaver
 
 !macro customInstall
-  ; Copy exe as .scr into System32 (optional) — or just register in-place
-  ; Register the installed exe as the active screensaver
-  WriteRegStr HKCU "Control Panel\Desktop" "SCRNSAVE.EXE" "$INSTDIR\ClawdClock.exe"
-  WriteRegStr HKCU "Control Panel\Desktop" "ScreenSaveActive" "1"
-
-  ; Create a .scr copy alongside the exe for manual right-click install
+  ; Create a .scr copy alongside the exe (same binary; arg-parses /s /p /c).
   CopyFiles "$INSTDIR\ClawdClock.exe" "$INSTDIR\ClawdClock.scr"
+
+  ; Register the .scr (not the .exe) as the active screensaver so the Windows
+  ; Screen Saver Settings dialog previews and configures it correctly.
+  WriteRegStr HKCU "Control Panel\Desktop" "SCRNSAVE.EXE" "$INSTDIR\ClawdClock.scr"
+  WriteRegStr HKCU "Control Panel\Desktop" "ScreenSaveActive" "1"
 !macroend
 
 !macro customUnInstall

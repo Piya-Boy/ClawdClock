@@ -44,6 +44,8 @@ export interface SettingsState {
   setClockHotkey: (v: string) => void;
 }
 
+export type UsageSource = 'live' | 'cached';
+
 export interface UsageData {
   sessionUsage: number;
   weeklyUsage: number;
@@ -51,6 +53,9 @@ export interface UsageData {
   weeklyResetAt: string;
   sessionCountdown: string;
   weeklyCountdown: string;
+  dataSource: UsageSource;
+  fetchedAt: number;       // unix seconds; 0 if unknown
+  diagnostic: string | null;
 }
 
 export interface UsageState {
@@ -63,6 +68,9 @@ export interface UsageState {
   isLoading: boolean;
   error: string | null;
   lastUpdated: Date | null;
+  dataSource: UsageSource;
+  fetchedAt: number;       // unix seconds of underlying data; 0 if unknown
+  diagnostic: string | null;
   refreshUsage: () => Promise<void>;
 }
 

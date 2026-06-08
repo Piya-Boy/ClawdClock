@@ -30,7 +30,7 @@ export function App() {
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
-    error,
+    error, dataSource,
   } = useUsageStore();
 
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
@@ -62,6 +62,7 @@ export function App() {
           sessionColor={sessionColor}
           weeklyColor={weeklyColor}
           error={error}
+          dataSource={dataSource}
         />
       </div>
     </div>
