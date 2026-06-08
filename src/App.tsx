@@ -32,12 +32,12 @@ export function App() {
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
-    error, dataSource,
+    error,
   } = useUsageStore();
 
-  // Clock window only shows auth errors (NOT LOGGED IN). Stale/cached/rate-limit
-  // diagnostics live in settings footer — no badge clutter on the screensaver.
-  const clockError = error && /credentials not found|log in/i.test(error) ? error : null;
+  // No caching — a fetch failure means we have nothing real to show, so always
+  // surface the error on the clock (NOT LOGGED IN / RATE LIMITED / OFFLINE).
+  const clockError = error;
 
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
   const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.accent;
@@ -68,7 +68,6 @@ export function App() {
           sessionColor={sessionColor}
           weeklyColor={weeklyColor}
           error={clockError}
-          dataSource={dataSource}
         />
       </div>
     </div>

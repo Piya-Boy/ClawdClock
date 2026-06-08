@@ -21,10 +21,8 @@ export const useUsageStore = create<UsageState>()((set, get) => ({
     if (get().isLoading) return;
     set({ isLoading: true, error: null });
     try {
+      // No caching — a resolved fetch is always fresh, live data.
       const data = await fetchUsage();
-      // Cached fallback still resolves, but the numbers are stale. Surface the
-      // real reason instead of silently showing old data.
-      const stale = data.dataSource === 'cached';
       set({
         sessionPct: data.sessionUsage,
         weeklyPct: data.weeklyUsage,
@@ -34,10 +32,10 @@ export const useUsageStore = create<UsageState>()((set, get) => ({
         weeklyCountdown: formatCountdown(data.weeklyResetAt),
         isLoading: false,
         lastUpdated: new Date(),
-        dataSource: data.dataSource,
+        dataSource: 'live',
         fetchedAt: data.fetchedAt,
-        diagnostic: data.diagnostic,
-        error: stale ? (data.diagnostic ?? 'showing cached data') : null,
+        diagnostic: null,
+        error: null,
       });
     } catch (err) {
       set({

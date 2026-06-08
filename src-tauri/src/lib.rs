@@ -147,21 +147,19 @@ pub struct UsageResult {
     pub weekly_usage: f64,
     pub session_resets_at: String,
     pub weekly_resets_at: String,
-    /// "live" = fresh from API, "cached" = stale fallback after a failure.
+    /// Always "live" — usage is fetched fresh from the API, never cached.
     #[serde(default = "default_source")]
     pub data_source: String,
-    /// Unix seconds when this data was fetched from the API. Lets the UI show
-    /// how stale a cached value is.
+    /// Unix seconds when this data was fetched from the API.
     #[serde(default)]
     pub fetched_at: u64,
-    /// Present only when the live fetch failed and we fell back to cache.
-    /// Surfaces the real error instead of silently showing old numbers.
+    /// Present only when something is off (kept for forward compat with the UI).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub diagnostic: Option<String>,
 }
 
 fn default_source() -> String {
-    "cached".to_string()
+    "live".to_string()
 }
 
 fn now_unix() -> u64 {
@@ -169,40 +167,6 @@ fn now_unix() -> u64 {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs())
         .unwrap_or(0)
-}
-
-/// Load cache and tag it as a stale fallback, attaching the failure reason.
-fn cached_fallback(app: &tauri::AppHandle, reason: String) -> Result<UsageResult, String> {
-    match load_usage_cache(app) {
-        Some(mut c) => {
-            c.data_source = "cached".to_string();
-            c.diagnostic = Some(reason);
-            Ok(c)
-        }
-        None => Err(reason),
-    }
-}
-
-fn usage_cache_path(app: &tauri::AppHandle) -> std::path::PathBuf {
-    app.path().app_data_dir()
-        .expect("no app data dir")
-        .join("usage_cache.json")
-}
-
-fn save_usage_cache(app: &tauri::AppHandle, result: &UsageResult) {
-    let path = usage_cache_path(app);
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
-    }
-    if let Ok(data) = serde_json::to_string(result) {
-        let _ = fs::write(path, data);
-    }
-}
-
-fn load_usage_cache(app: &tauri::AppHandle) -> Option<UsageResult> {
-    let path = usage_cache_path(app);
-    let data = fs::read_to_string(path).ok()?;
-    serde_json::from_str(&data).ok()
 }
 
 fn cooldown_path(app: &tauri::AppHandle) -> std::path::PathBuf {
@@ -238,13 +202,10 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
     let cd = cooldown_until(&app);
     if cd > now_unix() {
         let wait = cd - now_unix();
-        return cached_fallback(&app, format!("rate limited — retry in {wait}s"));
+        return Err(format!("rate limited — retry in {wait}s"));
     }
 
-    let token = match read_access_token() {
-        Ok(t) => t,
-        Err(e) => return cached_fallback(&app, e),
-    };
+    let token = read_access_token()?;
 
     let client = reqwest::Client::builder()
         .user_agent("ClawdClock/0.1")
@@ -255,40 +216,37 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
         .get("https://api.anthropic.com/api/oauth/usage")
         .bearer_auth(&token)
         .send()
-        .await;
-
-    let resp = match resp {
-        Ok(r) => r,
-        Err(e) => return cached_fallback(&app, format!("network error: {e}")),
-    };
+        .await
+        .map_err(|e| format!("network error: {e}"))?;
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
-        // 429: back off. Honor Retry-After if present, else default 5 min.
+        // 429: back off. Honor Retry-After if present, but cap at 5 min — the
+        // API can hand back very long windows (50+ min) that leave the UI
+        // frozen. With no header, default to a short 60s so we recover fast.
         if status == 429 {
+            const MAX_COOLDOWN_SECS: u64 = 300;
             let retry_after = resp
                 .headers()
                 .get("retry-after")
                 .and_then(|v| v.to_str().ok())
                 .and_then(|s| s.trim().parse::<u64>().ok())
-                .unwrap_or(300);
+                .unwrap_or(60)
+                .min(MAX_COOLDOWN_SECS);
             set_cooldown(&app, retry_after);
-            return cached_fallback(&app, format!("rate limited (429) — backing off {retry_after}s"));
+            return Err(format!("rate limited (429) — backing off {retry_after}s"));
         }
         let body = resp.text().await.unwrap_or_default();
         let truncated: String = body.chars().take(200).collect();
-        return cached_fallback(&app, format!("API error {status}: {truncated}"));
+        return Err(format!("API error {status}: {truncated}"));
     }
 
     let body = resp.text().await
         .map_err(|e| format!("read error: {e}"))?;
-    let data: UsageResponse = match serde_json::from_str(&body) {
-        Ok(d) => d,
-        Err(e) => {
-            let truncated: String = body.chars().take(200).collect();
-            return cached_fallback(&app, format!("parse error: {e} — body: {truncated}"));
-        }
-    };
+    let data: UsageResponse = serde_json::from_str(&body).map_err(|e| {
+        let truncated: String = body.chars().take(200).collect();
+        format!("parse error: {e} — body: {truncated}")
+    })?;
 
     let result = UsageResult {
         session_usage: data.five_hour.utilization,
@@ -300,7 +258,6 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
         diagnostic: None,
     };
 
-    save_usage_cache(&app, &result);
     clear_cooldown(&app); // recovered — drop any prior 429 backoff
     Ok(result)
 }

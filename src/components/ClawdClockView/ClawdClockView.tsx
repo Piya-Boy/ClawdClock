@@ -16,7 +16,6 @@ interface Props {
   sessionColor: string;
   weeklyColor: string;
   error: string | null;
-  dataSource?: 'live' | 'cached';
 }
 
 export function ClawdClockView({
@@ -24,16 +23,18 @@ export function ClawdClockView({
   sessionPct, weeklyPct,
   sessionCountdown, weeklyCountdown,
   sessionColor, weeklyColor,
-  error, dataSource,
+  error,
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
   const ampm = timeFormat === '12' ? (rawH >= 12 ? 'PM' : 'AM') : undefined;
+  // No caching: usage is always live. On a failed fetch we show the reason
+  // instead of stale numbers.
   const notLoggedIn = !!error && /credentials not found|log in/i.test(error);
-  // Stale cache: we have numbers but a live refresh failed. Distinct from a
-  // hard offline/no-data state.
-  const stale = !notLoggedIn && (dataSource === 'cached' || (!!error && !notLoggedIn));
-  const badge = notLoggedIn ? 'NOT LOGGED IN' : stale ? 'CACHED' : 'OFFLINE';
+  const rateLimited = !notLoggedIn && !!error && /rate limit|429/i.test(error);
+  const badge = notLoggedIn ? 'NOT LOGGED IN'
+    : rateLimited ? 'RATE LIMITED'
+    : 'OFFLINE';
   return (
     <div style={{
       width: 1920, height: 1080,
@@ -74,7 +75,7 @@ export function ClawdClockView({
             }}>
               <div style={{
                 fontSize: 22, fontWeight: 600,
-                color: stale ? theme.warning : theme.critical,
+                color: rateLimited ? theme.warning : theme.critical,
                 fontFamily: FF, letterSpacing: '0.08em',
               }}>
                 {badge}
@@ -86,6 +87,15 @@ export function ClawdClockView({
                   fontFamily: FF, letterSpacing: '0.04em', marginTop: 6,
                 }}>
                   run: claude auth login
+                </div>
+              )}
+              {rateLimited && (
+                <div style={{
+                  fontSize: 16, fontWeight: 500,
+                  color: theme.headerColor, opacity: 0.7,
+                  fontFamily: FF, letterSpacing: '0.04em', marginTop: 6,
+                }}>
+                  retrying shortly…
                 </div>
               )}
             </div>
