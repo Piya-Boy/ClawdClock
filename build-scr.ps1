@@ -1,6 +1,10 @@
 param(
-    [string]$Version = "0.1.0"
+    [string]$Version = ""
 )
+
+if (-not $Version) {
+    $Version = (Get-Content package.json | ConvertFrom-Json).version
+}
 
 $ErrorActionPreference = "Stop"
 
