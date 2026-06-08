@@ -33,9 +33,11 @@ $conf | ConvertTo-Json -Depth 10 | ForEach-Object { $_.TrimEnd() } |
     Set-Content src-tauri/Cargo.toml -Encoding UTF8
 
 Step "Committing + tagging $tag"
-git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml
-git diff --cached --quiet && Die "Nothing staged — version already at $Version?"
+git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
+git diff --cached --quiet
+if ($LASTEXITCODE -eq 0) { Die "Nothing staged — version already at $Version?" }
 git commit -m "release: $tag"
+if ($LASTEXITCODE -ne 0) { Die "commit failed" }
 git tag $tag
 git push origin main
 git push origin $tag
