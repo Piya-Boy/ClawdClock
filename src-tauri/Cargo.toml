@@ -1,8 +1,8 @@
 [package]
 name = "clawdclock"
-version = "1.0.0"
+version = "1.0.1"
 description = "A Tauri App"
-authors = ["Piya-Boy <piyamianglae.dev@gmail.com>"]
+authors = ["Piya-Boy <piyaboy097@gmail.com>"]
 edition = "2021"
 
 [lib]
@@ -23,5 +23,8 @@ tokio = { version = "1", features = ["rt", "macros"] }
 dirs = "6"
 tauri-plugin-updater = "2.10.1"
 
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"
+
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_Foundation", "Win32_System_SystemInformation", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+windows-sys = { version = "0.59", features = ["Win32_UI_Input_KeyboardAndMouse", "Win32_Foundation", "Win32_System_SystemInformation", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_Graphics_Gdi"] }
