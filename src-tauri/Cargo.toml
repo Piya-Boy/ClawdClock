@@ -1,6 +1,8 @@
 [package]
 name = "clawdclock"
-version = "1.0.4"
+# Placeholder — real version read from ../package.json via tauri.conf.json
+# ("version": "../package.json"). Bump version in package.json only.
+version = "0.0.0"
 description = "A Tauri App"
 authors = ["Piya-Boy <piyaboy097@gmail.com>"]
 edition = "2021"

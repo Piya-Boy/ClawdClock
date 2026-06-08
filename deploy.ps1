@@ -16,24 +16,16 @@ $tag = "v$Version"
 
 Step "Bumping version to $Version"
 
-# package.json
+# package.json is the single source of truth. tauri.conf.json reads its version
+# from "../package.json", and Cargo.toml's version is an unused 0.0.0 placeholder
+# — so we only bump package.json here.
 $pkg = Get-Content package.json -Raw | ConvertFrom-Json
 $pkg.version = $Version
 $pkg | ConvertTo-Json -Depth 10 | ForEach-Object { $_.TrimEnd() } |
     Set-Content package.json -Encoding UTF8
 
-# tauri.conf.json
-$conf = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
-$conf.version = $Version
-$conf | ConvertTo-Json -Depth 10 | ForEach-Object { $_.TrimEnd() } |
-    Set-Content src-tauri/tauri.conf.json -Encoding UTF8
-
-# Cargo.toml — sed-style replace
-(Get-Content src-tauri/Cargo.toml -Raw) -replace '^version = "[\d.]+"', "version = `"$Version`"" |
-    Set-Content src-tauri/Cargo.toml -Encoding UTF8
-
 Step "Committing + tagging $tag"
-git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
+git add package.json
 git diff --cached --quiet
 if ($LASTEXITCODE -eq 0) { Die "Nothing staged — version already at $Version?" }
 git commit -m "release: $tag"
