@@ -205,23 +205,10 @@ fn load_usage_cache(app: &tauri::AppHandle) -> Option<UsageResult> {
     serde_json::from_str(&data).ok()
 }
 
-/// Minimum seconds between live API hits. Multiple windows (clock + settings)
-/// each poll independently, so without a shared throttle they double up and
-/// can trip the API's rate limit (429). The cache file's mtime is the shared
-/// clock across all windows in this single-instance app.
-const MIN_FETCH_INTERVAL_SECS: u64 = 90;
-
 fn cooldown_path(app: &tauri::AppHandle) -> std::path::PathBuf {
     app.path().app_data_dir()
         .expect("no app data dir")
         .join("usage_cooldown")
-}
-
-/// Age in seconds of the cached usage data, or None if there's no cache yet.
-fn usage_cache_age_secs(app: &tauri::AppHandle) -> Option<u64> {
-    let meta = fs::metadata(usage_cache_path(app)).ok()?;
-    let modified = meta.modified().ok()?;
-    modified.elapsed().ok().map(|d| d.as_secs())
 }
 
 /// Unix-seconds until which we must not hit the API (set after a 429).
@@ -247,16 +234,6 @@ fn clear_cooldown(app: &tauri::AppHandle) {
 
 #[tauri::command]
 async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String> {
-    // Throttle: if we have fresh-enough cache, serve it without hitting the API.
-    // Stops clock + settings windows from doubling up the request rate.
-    if let Some(age) = usage_cache_age_secs(&app) {
-        if age < MIN_FETCH_INTERVAL_SECS {
-            if let Some(c) = load_usage_cache(&app) {
-                return Ok(c);
-            }
-        }
-    }
-
     // Rate-limit cooldown after a prior 429: don't even try until it expires.
     let cd = cooldown_until(&app);
     if cd > now_unix() {
