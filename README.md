@@ -76,6 +76,30 @@ It runs as a normal app, a system-tray resident, **and** a registered Windows sc
 2. Run the installer.
 3. Make sure you're logged into Claude Code (`claude` CLI) so `~/.claude/.credentials.json` exists.
 
+### "Windows blocked this app" / Smart App Control
+
+ClawdClock isn't code-signed yet, so Windows SmartScreen or **Smart App Control (SAC)** may block the installer. This is expected for any unsigned indie app — the file is safe; Windows just doesn't recognize the publisher. Pick whichever applies:
+
+**SmartScreen popup** ("Windows protected your PC"):
+- Click **More info** → **Run anyway**.
+
+**File still flagged after download** (right-click → Properties shows a security warning):
+- Tick **Unblock** at the bottom of the Properties dialog → **OK**, then run it. Or via PowerShell:
+  ```powershell
+  Unblock-File "$env:USERPROFILE\Downloads\ClawdClock_*_x64-setup.exe"
+  ```
+
+**Smart App Control blocks it outright** (no "Run anyway" button):
+SAC checks publisher reputation, not just the download flag, so unblocking the file isn't enough. Check whether SAC is enforced:
+```powershell
+(Get-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy").VerifiedAndReputablePolicyState
+# 0 = off, 1 = enforced, 2 = evaluation
+```
+If it returns `1`, the only way to run an unsigned app is to turn SAC off:
+> **Settings → Privacy & security → Windows Security → App & browser control → Smart App Control settings → Off**
+
+> ⚠️ Turning Smart App Control **off is permanent** — re-enabling it requires resetting Windows. This is a Microsoft restriction, not ClawdClock's. If you'd rather not disable it, you'll need to wait for a signed build.
+
 ### First run
 
 1. Open ClawdClock — the settings window appears, and an icon lands in your system tray.
