@@ -33,6 +33,10 @@ export function App() {
     error, dataSource,
   } = useUsageStore();
 
+  // Clock window only shows auth errors (NOT LOGGED IN). Stale/cached/rate-limit
+  // diagnostics live in settings footer — no badge clutter on the screensaver.
+  const clockError = error && /credentials not found|log in/i.test(error) ? error : null;
+
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
   const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.accent;
 
@@ -61,7 +65,7 @@ export function App() {
           weeklyCountdown={weeklyCountdown}
           sessionColor={sessionColor}
           weeklyColor={weeklyColor}
-          error={error}
+          error={clockError}
           dataSource={dataSource}
         />
       </div>

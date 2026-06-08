@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { Release } from '../../hooks/useChangelog';
+import { renderMarkdown } from '../../utils/miniMarkdown';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 const C_ACC = '#FF6B3D';
@@ -87,10 +88,10 @@ export function ChangelogPanel({ releases, onClose }: Props) {
                   {formatDate(rel.publishedAt)}
                 </div>
                 <div style={{
-                  fontSize: 12, color: '#666', fontFamily: FF,
-                  lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  fontSize: 12, color: '#888', fontFamily: FF,
+                  lineHeight: 1.7, wordBreak: 'break-word',
                 }}>
-                  {rel.body || 'No release notes.'}
+                  {rel.body ? renderMarkdown(rel.body) : 'No release notes.'}
                 </div>
               </>
             ) : (

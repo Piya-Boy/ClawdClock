@@ -205,8 +205,65 @@ fn load_usage_cache(app: &tauri::AppHandle) -> Option<UsageResult> {
     serde_json::from_str(&data).ok()
 }
 
+/// Minimum seconds between live API hits. Multiple windows (clock + settings)
+/// each poll independently, so without a shared throttle they double up and
+/// can trip the API's rate limit (429). The cache file's mtime is the shared
+/// clock across all windows in this single-instance app.
+const MIN_FETCH_INTERVAL_SECS: u64 = 90;
+
+fn cooldown_path(app: &tauri::AppHandle) -> std::path::PathBuf {
+    app.path().app_data_dir()
+        .expect("no app data dir")
+        .join("usage_cooldown")
+}
+
+/// Age in seconds of the cached usage data, or None if there's no cache yet.
+fn usage_cache_age_secs(app: &tauri::AppHandle) -> Option<u64> {
+    let meta = fs::metadata(usage_cache_path(app)).ok()?;
+    let modified = meta.modified().ok()?;
+    modified.elapsed().ok().map(|d| d.as_secs())
+}
+
+/// Unix-seconds until which we must not hit the API (set after a 429).
+fn cooldown_until(app: &tauri::AppHandle) -> u64 {
+    fs::read_to_string(cooldown_path(app))
+        .ok()
+        .and_then(|s| s.trim().parse::<u64>().ok())
+        .unwrap_or(0)
+}
+
+fn set_cooldown(app: &tauri::AppHandle, secs_from_now: u64) {
+    let until = now_unix() + secs_from_now;
+    let path = cooldown_path(app);
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let _ = fs::write(path, until.to_string());
+}
+
+fn clear_cooldown(app: &tauri::AppHandle) {
+    let _ = fs::remove_file(cooldown_path(app));
+}
+
 #[tauri::command]
 async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String> {
+    // Throttle: if we have fresh-enough cache, serve it without hitting the API.
+    // Stops clock + settings windows from doubling up the request rate.
+    if let Some(age) = usage_cache_age_secs(&app) {
+        if age < MIN_FETCH_INTERVAL_SECS {
+            if let Some(c) = load_usage_cache(&app) {
+                return Ok(c);
+            }
+        }
+    }
+
+    // Rate-limit cooldown after a prior 429: don't even try until it expires.
+    let cd = cooldown_until(&app);
+    if cd > now_unix() {
+        let wait = cd - now_unix();
+        return cached_fallback(&app, format!("rate limited — retry in {wait}s"));
+    }
+
     let token = match read_access_token() {
         Ok(t) => t,
         Err(e) => return cached_fallback(&app, e),
@@ -230,6 +287,17 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
 
     if !resp.status().is_success() {
         let status = resp.status().as_u16();
+        // 429: back off. Honor Retry-After if present, else default 5 min.
+        if status == 429 {
+            let retry_after = resp
+                .headers()
+                .get("retry-after")
+                .and_then(|v| v.to_str().ok())
+                .and_then(|s| s.trim().parse::<u64>().ok())
+                .unwrap_or(300);
+            set_cooldown(&app, retry_after);
+            return cached_fallback(&app, format!("rate limited (429) — backing off {retry_after}s"));
+        }
         let body = resp.text().await.unwrap_or_default();
         let truncated: String = body.chars().take(200).collect();
         return cached_fallback(&app, format!("API error {status}: {truncated}"));
@@ -256,6 +324,7 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
     };
 
     save_usage_cache(&app, &result);
+    clear_cooldown(&app); // recovered — drop any prior 429 backoff
     Ok(result)
 }
 
