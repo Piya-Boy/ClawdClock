@@ -8,7 +8,7 @@ export interface Release {
   url: string;
 }
 
-const RELEASES_URL = 'https://api.github.com/repos/piyaboy/clawdclock/releases?per_page=5';
+const RELEASES_URL = 'https://api.github.com/repos/Piya-Boy/ClawdClock/releases?per_page=5';
 const CACHE_KEY = 'clawdclock-changelog-cache';
 const CACHE_TTL_MS = 3_600_000; // 1 hour
 

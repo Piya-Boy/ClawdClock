@@ -677,9 +677,9 @@ fn rollback_update() -> Result<(), String> {
 async fn check_for_update_channel(app: tauri::AppHandle, channel: String) -> Result<Option<UpdateInfo>, String> {
     use tauri_plugin_updater::UpdaterExt;
     let endpoint = match channel.as_str() {
-        "beta" => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest-beta.json",
-        "dev"  => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest-dev.json",
-        _      => "https://github.com/piyaboy/clawdclock/releases/latest/download/latest.json",
+        "beta" => "https://github.com/Piya-Boy/ClawdClock/releases/latest/download/latest-beta.json",
+        "dev"  => "https://github.com/Piya-Boy/ClawdClock/releases/latest/download/latest-dev.json",
+        _      => "https://github.com/Piya-Boy/ClawdClock/releases/latest/download/latest.json",
     };
     let url = endpoint.parse::<tauri::Url>().map_err(|e| e.to_string())?;
     let builder = app.updater_builder();
