@@ -32,12 +32,16 @@ export function App() {
   const {
     sessionPct, weeklyPct,
     sessionCountdown, weeklyCountdown,
+    sessionResetAt, weeklyResetAt,
     error,
   } = useUsageStore();
 
-  // No caching — a fetch failure means we have nothing real to show, so always
-  // surface the error on the clock (NOT LOGGED IN / RATE LIMITED / OFFLINE).
-  const clockError = error;
+  // Surface the error badge only when we have nothing real to show. If a
+  // previous fetch succeeded, we still hold valid numbers (a transient 429 or
+  // network blip shouldn't slap an OFFLINE badge over good data) — keep showing
+  // them silently until the next successful refresh.
+  const haveData = !!sessionResetAt || !!weeklyResetAt;
+  const clockError = haveData ? null : error;
 
   const sessionColor = sessionPct >= 90 ? theme.critical : sessionPct >= 70 ? theme.warning : theme.healthy;
   const weeklyColor  = weeklyPct  >= 90 ? theme.critical : weeklyPct  >= 70 ? theme.warning : theme.accent;
