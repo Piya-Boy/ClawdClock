@@ -100,31 +100,128 @@ fn hide_clock_window(app: tauri::AppHandle) -> Result<(), String> {
 
 /* ── Claude OAuth Credentials ───────────────────────────────── */
 
-#[derive(Debug, Serialize, Deserialize)]
-struct OAuthCredentials {
-    #[serde(rename = "claudeAiOauth")]
-    claude_ai_oauth: OAuthTokens,
-}
+// Claude Code's public OAuth client id (same one the CLI uses to refresh).
+const OAUTH_CLIENT_ID: &str = "9d1c250a-e61b-44d9-88ed-5944d1962f5e";
+const OAUTH_TOKEN_URL: &str = "https://console.anthropic.com/v1/oauth/token";
+// Refresh proactively when the access token has under this long to live.
+const TOKEN_REFRESH_SKEW_MS: i64 = 5 * 60 * 1000;
 
-#[derive(Debug, Serialize, Deserialize)]
-struct OAuthTokens {
-    #[serde(rename = "accessToken")]
+/// Tokens we care about. Everything else in the file (scopes, subscriptionType,
+/// rateLimitTier, …) is preserved verbatim via the untyped `extra` map so we
+/// never clobber fields Claude Code relies on.
+#[derive(Debug, Clone)]
+struct Tokens {
     access_token: String,
-    #[serde(rename = "refreshToken")]
     refresh_token: String,
+    expires_at: i64, // unix millis; 0 if unknown
 }
 
 fn credentials_path() -> Option<std::path::PathBuf> {
     dirs::home_dir().map(|h| h.join(".claude").join(".credentials.json"))
 }
 
-fn read_access_token() -> Result<String, String> {
+fn now_unix_millis() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0)
+}
+
+/// Read the whole credentials file as a JSON value plus the parsed tokens.
+/// Returns (full_json, tokens). Keeping the full value lets us write back
+/// without dropping unknown fields.
+fn read_credentials() -> Result<(serde_json::Value, Tokens), String> {
     let path = credentials_path().ok_or("cannot determine home dir")?;
     let data = fs::read_to_string(&path)
         .map_err(|_| "credentials not found — log in to Claude Code first".to_string())?;
-    let creds: OAuthCredentials = serde_json::from_str(&data)
+    let root: serde_json::Value = serde_json::from_str(&data)
         .map_err(|e| format!("credentials parse error: {e}"))?;
-    Ok(creds.claude_ai_oauth.access_token)
+
+    let oauth = root.get("claudeAiOauth")
+        .ok_or("credentials missing claudeAiOauth")?;
+    let access_token = oauth.get("accessToken").and_then(|v| v.as_str())
+        .ok_or("credentials missing accessToken")?
+        .to_string();
+    let refresh_token = oauth.get("refreshToken").and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let expires_at = oauth.get("expiresAt").and_then(|v| v.as_i64()).unwrap_or(0);
+
+    Ok((root, Tokens { access_token, refresh_token, expires_at }))
+}
+
+/// Write new tokens back into the credentials file, preserving every other
+/// field. Atomic: write a temp file beside the target then rename over it.
+fn write_tokens(mut root: serde_json::Value, tokens: &Tokens) -> Result<(), String> {
+    let oauth = root.get_mut("claudeAiOauth")
+        .and_then(|v| v.as_object_mut())
+        .ok_or("credentials missing claudeAiOauth object")?;
+    oauth.insert("accessToken".into(), tokens.access_token.clone().into());
+    if !tokens.refresh_token.is_empty() {
+        oauth.insert("refreshToken".into(), tokens.refresh_token.clone().into());
+    }
+    if tokens.expires_at > 0 {
+        oauth.insert("expiresAt".into(), tokens.expires_at.into());
+    }
+
+    let path = credentials_path().ok_or("cannot determine home dir")?;
+    let data = serde_json::to_string_pretty(&root).map_err(|e| e.to_string())?;
+    let tmp = path.with_extension("json.tmp");
+    fs::write(&tmp, &data).map_err(|e| format!("write temp creds failed: {e}"))?;
+    fs::rename(&tmp, &path).map_err(|e| format!("rename creds failed: {e}"))?;
+    Ok(())
+}
+
+#[derive(Debug, Deserialize)]
+struct RefreshResponse {
+    access_token: String,
+    #[serde(default)]
+    refresh_token: Option<String>,
+    #[serde(default)]
+    expires_in: Option<i64>, // seconds
+}
+
+/// Exchange the stored refresh token for a fresh access token, then persist it.
+/// Returns the new access token.
+async fn refresh_access_token(client: &reqwest::Client) -> Result<String, String> {
+    let (root, tokens) = read_credentials()?;
+    if tokens.refresh_token.is_empty() {
+        return Err("no refresh token — log in to Claude Code again".into());
+    }
+
+    let body = serde_json::json!({
+        "grant_type": "refresh_token",
+        "refresh_token": tokens.refresh_token,
+        "client_id": OAUTH_CLIENT_ID,
+    });
+
+    let resp = client
+        .post(OAUTH_TOKEN_URL)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("token refresh network error: {e}"))?;
+
+    if !resp.status().is_success() {
+        let status = resp.status().as_u16();
+        let txt = resp.text().await.unwrap_or_default();
+        let truncated: String = txt.chars().take(200).collect();
+        return Err(format!("token refresh failed ({status}): {truncated}"));
+    }
+
+    let rr: RefreshResponse = resp.json().await
+        .map_err(|e| format!("token refresh parse error: {e}"))?;
+
+    let new_tokens = Tokens {
+        access_token: rr.access_token.clone(),
+        // Honor refresh-token rotation: keep the new one if returned, else reuse.
+        refresh_token: rr.refresh_token.unwrap_or(tokens.refresh_token),
+        expires_at: rr.expires_in
+            .map(|s| now_unix_millis() + s * 1000)
+            .unwrap_or(tokens.expires_at),
+    };
+    write_tokens(root, &new_tokens)?;
+    Ok(rr.access_token)
 }
 
 /* ── Claude Usage API ───────────────────────────────────────── */
@@ -196,6 +293,52 @@ fn clear_cooldown(app: &tauri::AppHandle) {
     let _ = fs::remove_file(cooldown_path(app));
 }
 
+/// Outcome of a single usage GET. `Unauthorized` is split out so the caller
+/// can refresh the token and retry exactly once.
+enum UsageFetch {
+    Ok(UsageResponse),
+    Unauthorized,
+    RateLimited(u64), // seconds to back off
+    Other(String),
+}
+
+async fn fetch_usage_once(client: &reqwest::Client, token: &str) -> Result<UsageFetch, String> {
+    let resp = client
+        .get("https://api.anthropic.com/api/oauth/usage")
+        .bearer_auth(token)
+        .send()
+        .await
+        .map_err(|e| format!("network error: {e}"))?;
+
+    let status = resp.status().as_u16();
+    if status == 401 || status == 403 {
+        return Ok(UsageFetch::Unauthorized);
+    }
+    if status == 429 {
+        const MAX_COOLDOWN_SECS: u64 = 300;
+        let retry_after = resp
+            .headers()
+            .get("retry-after")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|s| s.trim().parse::<u64>().ok())
+            .unwrap_or(60)
+            .min(MAX_COOLDOWN_SECS);
+        return Ok(UsageFetch::RateLimited(retry_after));
+    }
+    if !resp.status().is_success() {
+        let body = resp.text().await.unwrap_or_default();
+        let truncated: String = body.chars().take(200).collect();
+        return Ok(UsageFetch::Other(format!("API error {status}: {truncated}")));
+    }
+
+    let body = resp.text().await.map_err(|e| format!("read error: {e}"))?;
+    let data: UsageResponse = serde_json::from_str(&body).map_err(|e| {
+        let truncated: String = body.chars().take(200).collect();
+        format!("parse error: {e} — body: {truncated}")
+    })?;
+    Ok(UsageFetch::Ok(data))
+}
+
 #[tauri::command]
 async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String> {
     // Rate-limit cooldown after a prior 429: don't even try until it expires.
@@ -205,48 +348,40 @@ async fn fetch_claude_usage(app: tauri::AppHandle) -> Result<UsageResult, String
         return Err(format!("rate limited — retry in {wait}s"));
     }
 
-    let token = read_access_token()?;
-
     let client = reqwest::Client::builder()
         .user_agent("ClawdClock/0.1")
         .build()
         .map_err(|e| e.to_string())?;
 
-    let resp = client
-        .get("https://api.anthropic.com/api/oauth/usage")
-        .bearer_auth(&token)
-        .send()
-        .await
-        .map_err(|e| format!("network error: {e}"))?;
-
-    if !resp.status().is_success() {
-        let status = resp.status().as_u16();
-        // 429: back off. Honor Retry-After if present, but cap at 5 min — the
-        // API can hand back very long windows (50+ min) that leave the UI
-        // frozen. With no header, default to a short 60s so we recover fast.
-        if status == 429 {
-            const MAX_COOLDOWN_SECS: u64 = 300;
-            let retry_after = resp
-                .headers()
-                .get("retry-after")
-                .and_then(|v| v.to_str().ok())
-                .and_then(|s| s.trim().parse::<u64>().ok())
-                .unwrap_or(60)
-                .min(MAX_COOLDOWN_SECS);
-            set_cooldown(&app, retry_after);
-            return Err(format!("rate limited (429) — backing off {retry_after}s"));
+    // Proactive refresh: if the stored token is expired or about to be, swap it
+    // out before spending the request. Best-effort — a failure here is fine,
+    // the reactive 401 path below is the real safety net.
+    let (_, creds) = read_credentials()?;
+    let mut token = creds.access_token;
+    if creds.expires_at > 0 && creds.expires_at - now_unix_millis() < TOKEN_REFRESH_SKEW_MS {
+        if let Ok(fresh) = refresh_access_token(&client).await {
+            token = fresh;
         }
-        let body = resp.text().await.unwrap_or_default();
-        let truncated: String = body.chars().take(200).collect();
-        return Err(format!("API error {status}: {truncated}"));
     }
 
-    let body = resp.text().await
-        .map_err(|e| format!("read error: {e}"))?;
-    let data: UsageResponse = serde_json::from_str(&body).map_err(|e| {
-        let truncated: String = body.chars().take(200).collect();
-        format!("parse error: {e} — body: {truncated}")
-    })?;
+    // First attempt, then one retry after a reactive token refresh on 401.
+    let mut attempt = fetch_usage_once(&client, &token).await?;
+    if let UsageFetch::Unauthorized = attempt {
+        let fresh = refresh_access_token(&client).await
+            .map_err(|e| format!("token expired and refresh failed: {e}"))?;
+        attempt = fetch_usage_once(&client, &fresh).await?;
+    }
+
+    let data = match attempt {
+        UsageFetch::Ok(data) => data,
+        UsageFetch::Unauthorized =>
+            return Err("unauthorized after refresh — log in to Claude Code again".into()),
+        UsageFetch::RateLimited(secs) => {
+            set_cooldown(&app, secs);
+            return Err(format!("rate limited (429) — backing off {secs}s"));
+        }
+        UsageFetch::Other(msg) => return Err(msg),
+    };
 
     let result = UsageResult {
         session_usage: data.five_hour.utilization,
