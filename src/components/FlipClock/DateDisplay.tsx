@@ -48,14 +48,14 @@ export function DateDisplay({ date, format, era, theme }: Props) {
   const text = formatDate(date, format, era);
   return (
     <div style={{
-      fontSize: format === 'short' ? 26 : 20,
-      fontWeight: 700,
+      fontSize: format === 'short' ? 52 : 38,
+      fontWeight: 800,
       color: theme.digitColorBot,
       fontFamily: FF,
-      letterSpacing: format === 'short' ? '0.10em' : '0.06em',
+      letterSpacing: format === 'short' ? '0.08em' : '0.04em',
       textAlign: 'center',
       whiteSpace: 'nowrap',
-      marginBottom: 12,
+      marginBottom: 24,
     }}>
       {text}
     </div>
