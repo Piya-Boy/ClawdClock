@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { invoke } from '@tauri-apps/api/core';
-import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat } from '../types';
+import type { SettingsState, ActivateAfterOption, SleepAfterOption, TimeFormat, DateFormat, DateEra } from '../types';
 import type { ThemeId } from '../themes';
 
 const SYNC_EVENT = 'settings-changed';
@@ -11,6 +11,7 @@ type SettingsValues = Pick<
   SettingsState,
   'activateAfter' | 'sleepAfter' | 'timeFormat' | 'theme' | 'oledMode'
   | 'launchAtStartup' | 'selectedMonitor' | 'lockScreenEnabled' | 'autoUpdate' | 'clockHotkey'
+  | 'dateFormat' | 'dateEra'
 >;
 
 // Guard against echo: when applying a change received from another window,
@@ -47,6 +48,8 @@ export const useSettingsStore = create<SettingsState>()(
         lockScreenEnabled: false,
         autoUpdate: true,
         clockHotkey: 'Ctrl+Shift+L',
+        dateFormat: 'none' as DateFormat,
+        dateEra: 'CE' as DateEra,
         setActivateAfter: (v: ActivateAfterOption) => setSync({ activateAfter: v }),
         setSleepAfter: (v: SleepAfterOption) => setSync({ sleepAfter: v }),
         setTimeFormat: (v: TimeFormat) => setSync({ timeFormat: v }),
@@ -60,6 +63,8 @@ export const useSettingsStore = create<SettingsState>()(
         setLockScreenEnabled: (v: boolean) => setSync({ lockScreenEnabled: v }),
         setAutoUpdate: (v: boolean) => setSync({ autoUpdate: v }),
         setClockHotkey: (v: string) => setSync({ clockHotkey: v }),
+        setDateFormat: (v: DateFormat) => setSync({ dateFormat: v }),
+        setDateEra: (v: DateEra) => setSync({ dateEra: v }),
       };
     },
     { name: 'clawdclock-settings' }

@@ -1,4 +1,6 @@
 export type TimeFormat = '24' | '12';
+export type DateFormat = 'none' | 'short' | 'long';
+export type DateEra = 'CE' | 'BE';
 
 export type ActivateAfterOption =
   | '1 minute'
@@ -32,6 +34,8 @@ export interface SettingsState {
   lockScreenEnabled: boolean;
   autoUpdate: boolean;
   clockHotkey: string;
+  dateFormat: DateFormat;
+  dateEra: DateEra;
   setActivateAfter: (v: ActivateAfterOption) => void;
   setSleepAfter: (v: SleepAfterOption) => void;
   setTimeFormat: (v: TimeFormat) => void;
@@ -42,6 +46,8 @@ export interface SettingsState {
   setLockScreenEnabled: (v: boolean) => void;
   setAutoUpdate: (v: boolean) => void;
   setClockHotkey: (v: string) => void;
+  setDateFormat: (v: DateFormat) => void;
+  setDateEra: (v: DateEra) => void;
 }
 
 export type UsageSource = 'live' | 'cached';
