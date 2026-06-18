@@ -15,7 +15,7 @@ const BE_MONTHS_LONG  = ['มกราคม','กุมภาพันธ์','
 
 function formatDate(date: Date, format: 'short' | 'long', era: DateEra): string {
   const d = date.getDay();
-  const day = date.getDate();
+  const day = String(date.getDate()).padStart(2, '0');
   const month = date.getMonth();
   const ceYear = date.getFullYear();
   const beYear = ceYear + 543;

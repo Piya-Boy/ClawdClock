@@ -67,7 +67,15 @@ export const useSettingsStore = create<SettingsState>()(
         setDateEra: (v: DateEra) => setSync({ dateEra: v }),
       };
     },
-    { name: 'clawdclock-settings' }
+    {
+      name: 'clawdclock-settings',
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<SettingsValues>),
+        dateFormat: (persisted as any)?.dateFormat ?? current.dateFormat,
+        dateEra: (persisted as any)?.dateEra ?? current.dateEra,
+      }),
+    }
   )
 );
 
