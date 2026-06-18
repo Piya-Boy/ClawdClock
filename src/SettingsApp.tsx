@@ -65,6 +65,7 @@ export function SettingsApp() {
     activateAfter, sleepAfter, timeFormat,
     theme: themeId, oledMode,
     launchAtStartup, selectedMonitor, lockScreenEnabled, autoUpdate, clockHotkey,
+    dateFormat, dateEra,
     setActivateAfter, setSleepAfter, setTimeFormat,
     setTheme, setOledMode,
     setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setAutoUpdate, setClockHotkey,
@@ -329,6 +330,9 @@ export function SettingsApp() {
               sessionColor={sessionColor}
               weeklyColor={weeklyColor}
               error={error}
+              now={now}
+              dateFormat={dateFormat}
+              dateEra={dateEra}
             />
           </div>
         </div>

@@ -1,6 +1,8 @@
 import { FlipClock } from '../FlipClock/FlipClock';
 import { UsageSection } from '../UsagePanel/UsageSection';
+import { DateDisplay } from '../FlipClock/DateDisplay';
 import type { Theme } from '../../themes';
+import type { DateFormat, DateEra } from '../../types';
 
 const FF = "'Barlow','Helvetica Neue',Helvetica,sans-serif";
 
@@ -16,6 +18,9 @@ interface Props {
   sessionColor: string;
   weeklyColor: string;
   error: string | null;
+  now: Date;
+  dateFormat: DateFormat;
+  dateEra: DateEra;
 }
 
 export function ClawdClockView({
@@ -23,7 +28,7 @@ export function ClawdClockView({
   sessionPct, weeklyPct,
   sessionCountdown, weeklyCountdown,
   sessionColor, weeklyColor,
-  error,
+  error, now, dateFormat, dateEra,
 }: Props) {
   const rawH = hours;
   const displayH = timeFormat === '12' ? (rawH % 12 || 12) : rawH;
@@ -48,7 +53,17 @@ export function ClawdClockView({
         width: '40%', height: '100%',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <FlipClock hours={displayH} minutes={minutes} theme={theme} ampm={ampm} />
+        <FlipClock
+          hours={displayH}
+          minutes={minutes}
+          theme={theme}
+          ampm={ampm}
+          dateNode={
+            dateFormat !== 'none'
+              ? <DateDisplay date={now} format={dateFormat} era={dateEra} theme={theme} />
+              : undefined
+          }
+        />
       </div>
 
       {/* Right: Usage panel */}

@@ -18,7 +18,7 @@ export function App() {
   useClaudeUsage();
   useKeepAwake();
 
-  const { lockScreenEnabled, theme: themeId, oledMode, timeFormat } = useSettingsStore();
+  const { lockScreenEnabled, theme: themeId, oledMode, timeFormat, dateFormat, dateEra } = useSettingsStore();
   const oledShift = useOledShift(oledMode);
   const theme = getTheme(themeId);
 
@@ -72,6 +72,9 @@ export function App() {
           sessionColor={sessionColor}
           weeklyColor={weeklyColor}
           error={clockError}
+          now={now}
+          dateFormat={dateFormat}
+          dateEra={dateEra}
         />
       </div>
     </div>

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { FlipDigit } from './FlipDigit';
 import type { Theme } from '../../themes';
 
@@ -6,13 +7,15 @@ interface Props {
   minutes: number;
   theme: Theme;
   ampm?: string;
+  dateNode?: ReactNode;
 }
 
-export function FlipClock({ hours, minutes, theme, ampm }: Props) {
+export function FlipClock({ hours, minutes, theme, ampm, dateNode }: Props) {
   const h = String(hours).padStart(2, '0');
   const m = String(minutes).padStart(2, '0');
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+      {dateNode}
       <div style={{ display: 'flex', gap: 12 }}>
         <FlipDigit value={h[0]} theme={theme} />
         <FlipDigit value={h[1]} theme={theme} />
