@@ -26,6 +26,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { getVersion } from '@tauri-apps/api/app';
 import { THEMES, THEME_ORDER, getTheme } from './themes';
 import type { ThemeId } from './themes';
+import type { DateFormat, DateEra } from './types';
 import './styles/globals.css';
 import './styles/settings.css';
 
@@ -67,6 +68,7 @@ export function SettingsApp() {
     launchAtStartup, selectedMonitor, lockScreenEnabled, autoUpdate, clockHotkey,
     dateFormat, dateEra,
     setActivateAfter, setSleepAfter, setTimeFormat,
+    setDateFormat, setDateEra,
     setTheme, setOledMode,
     setLaunchAtStartup, setSelectedMonitor, setLockScreenEnabled, setAutoUpdate, setClockHotkey,
   } = useSettingsStore();
@@ -169,6 +171,30 @@ export function SettingsApp() {
               />
             }
           />
+          <SettingRow
+            label="Date Format"
+            desc="Show date above the clock."
+            control={
+              <Dropdown
+                value={dateFormat === 'none' ? 'None' : dateFormat === 'short' ? 'Short' : 'Long'}
+                options={['None', 'Short', 'Long']}
+                onChange={v => setDateFormat((v === 'None' ? 'none' : v === 'Short' ? 'short' : 'long') as DateFormat)}
+              />
+            }
+          />
+          {dateFormat !== 'none' && (
+            <SettingRow
+              label="Date Era"
+              desc="CE = English, BE = Thai (+543 years)."
+              control={
+                <SegControl
+                  value={dateEra}
+                  options={[{ val: 'CE', label: 'CE' }, { val: 'BE', label: 'BE (พศ)' }]}
+                  onChange={v => setDateEra(v as DateEra)}
+                />
+              }
+            />
+          )}
           <SettingRow
             label="Theme"
             desc="Visual style for the clock display."
