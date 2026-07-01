@@ -1,0 +1,34 @@
+src/hooks/useClaudeUsage.ts
+  s_43d8464cade62f::t_b51a62428e8def 8-11
+  s_43d8464cade62f::t_e833dbb22b6899 21-22,35-44,46-48
+package-lock.json
+  s_43d8464cade62f::t_896e3207411a6d 3,9-10
+package.json
+  s_43d8464cade62f::t_80011867962474 4
+src/stores/usageStore.ts
+  s_74609148aa975b::t_c582bc0f6bf946 51-52,57-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "e67a1c9965c59debfebb1b33071dc25c2874249a",
+  "prompts": {},
+  "sessions": {
+    "s_43d8464cade62f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c84baa35-24f6-4fe5-a99f-04f95ebdc424",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Piya Miang-Lae <piyaboy097@gmail.com>"
+    },
+    "s_74609148aa975b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "acf301ad-151d-4790-b432-a92b256b043f",
+        "model": "unknown"
+      },
+      "human_author": "Piya Miang-Lae <piyaboy097@gmail.com>"
+    }
+  }
+}
