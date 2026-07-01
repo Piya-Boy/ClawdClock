@@ -1,0 +1,29 @@
+deploy.ps1
+  s_43d8464cade62f::t_39b547cbf0ce5d 18-38
+latest.json
+  s_74609148aa975b::t_01276bcebce79f 4-5,8-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.5",
+  "base_commit_sha": "03294ae5b720051c82c88d4198838b4b0a29314c",
+  "prompts": {},
+  "sessions": {
+    "s_43d8464cade62f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c84baa35-24f6-4fe5-a99f-04f95ebdc424",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Piya Miang-Lae <piyaboy097@gmail.com>"
+    },
+    "s_74609148aa975b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "acf301ad-151d-4790-b432-a92b256b043f",
+        "model": "unknown"
+      },
+      "human_author": "Piya Miang-Lae <piyaboy097@gmail.com>"
+    }
+  }
+}
