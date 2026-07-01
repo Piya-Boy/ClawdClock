@@ -48,9 +48,18 @@ export const useUsageStore = create<UsageState>()((set, get) => ({
 }));
 
 export function tickCountdowns() {
-  const { sessionResetAt, weeklyResetAt } = useUsageStore.getState();
+  const state = useUsageStore.getState();
+  const { sessionResetAt, weeklyResetAt } = state;
   const patch: Partial<UsageState> = {};
   if (sessionResetAt) patch.sessionCountdown = formatCountdown(sessionResetAt);
   if (weeklyResetAt)  patch.weeklyCountdown  = formatCountdown(weeklyResetAt);
   if (Object.keys(patch).length) useUsageStore.setState(patch);
+
+  // Reset window passed — stale % data, refresh immediately
+  const now = Date.now();
+  const sessionExpired = sessionResetAt && new Date(sessionResetAt).getTime() <= now;
+  const weeklyExpired  = weeklyResetAt  && new Date(weeklyResetAt).getTime()  <= now;
+  if ((sessionExpired || weeklyExpired) && !state.isLoading) {
+    state.refreshUsage();
+  }
 }

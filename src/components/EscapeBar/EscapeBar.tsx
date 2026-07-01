@@ -76,6 +76,5 @@ export function EscapeBar() {
           <path d="M2 2l10 10M12 2L2 12" stroke="rgba(255,255,255,0.9)" strokeWidth="1.8" strokeLinecap="round"/>
         </svg>
       </button>
-    </div>
-  );
+    </div> );
 }
