@@ -14,22 +14,28 @@ function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Cyan }
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { Die "Version must be X.Y.Z (no 'v' prefix)" }
 $tag = "v$Version"
 
-Step "Bumping version to $Version"
-
-# package.json is the single source of truth. tauri.conf.json reads its version
-# from "../package.json", and Cargo.toml's version is an unused 0.0.0 placeholder
-# — so we only bump package.json here.
 $pkg = Get-Content package.json -Raw | ConvertFrom-Json
-$pkg.version = $Version
-$pkg | ConvertTo-Json -Depth 10 | ForEach-Object { $_.TrimEnd() } |
-    Set-Content package.json -Encoding UTF8
+if ($pkg.version -eq $Version) {
+    Step "package.json already at $Version — skipping bump/commit"
+} else {
+    Step "Bumping version to $Version"
 
-Step "Committing + tagging $tag"
-git add package.json
-git diff --cached --quiet
-if ($LASTEXITCODE -eq 0) { Die "Nothing staged — version already at $Version?" }
-git commit -m "release: $tag"
-if ($LASTEXITCODE -ne 0) { Die "commit failed" }
+    # package.json is the single source of truth. tauri.conf.json reads its version
+    # from "../package.json", and Cargo.toml's version is an unused 0.0.0 placeholder
+    # — so we only bump package.json here.
+    $pkg.version = $Version
+    $pkg | ConvertTo-Json -Depth 10 | ForEach-Object { $_.TrimEnd() } |
+        Set-Content package.json -Encoding UTF8
+
+    Step "Committing $tag version bump"
+    git add package.json
+    git diff --cached --quiet
+    if ($LASTEXITCODE -eq 0) { Die "Nothing staged — version already at $Version?" }
+    git commit -m "release: $tag"
+    if ($LASTEXITCODE -ne 0) { Die "commit failed" }
+}
+
+Step "Tagging $tag"
 git tag $tag
 git push origin main
 git push origin $tag

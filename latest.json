@@ -1,11 +1,11 @@
 {
-  "notes": "Date display above clock (Short/Long, CE/BE era)",
   "platforms": {
     "windows-x86_64": {
-      "url": "https://github.com/Piya-Boy/ClawdClock/releases/download/v1.0.9/ClawdClock_1.0.9_x64-setup.exe",
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTV3N6Vk00VXp5WEl6eTRENlNEMTlIRUxWTExPZGZRckg0azl6Z0NQS1FUUWlyN0p6dHRaNnA4VkdVWERwaTBTWFdLYklYR25DV2I0a1RWeXMvWS90YlpDNGJBMm9BMEFnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgxNzg5MzU0CWZpbGU6Q2xhd2RDbG9ja18xLjAuOV94NjQtc2V0dXAuZXhlCjE4bXQ0YjVFUTFTWW5WNzQ0MFVQaXp6alJ6bXlLdWg2ZW01T2tzMVlxM3pwSVIwd0FVUTk5eTdxTVFwemFoQVR1c2ZiS3FCRlB0UVYrQWUxa3pYb0JnPT0K"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTV3N6Vk00VXp5WEJrOU8xZXlOeFBDSTVuSU1kRXRMY2tQQTBoSGJWZ1BaOTdjZ1JRU1FFeTgzcWpzWU9yV3hyVGlyK3I2RGt6VG4zWXJHalZwbGN6eWlncGoybTBqNXdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgyODgyNjQ2CWZpbGU6Q2xhd2RDbG9ja18xLjEuMF94NjQtc2V0dXAuZXhlCmVsODlmWkFNZ3RpK1dyWm1tUk0yQUxiNXlHcjhjdi9jdVhHTWtHdFY3YWU5VlR2Nlo1VUp5S3JQMVU3NEJQbllsZkFvWGswMjluRmoxVHRZbERaMkFRPT0K",
+      "url": "https://github.com/Piya-Boy/ClawdClock/releases/download/v1.1.0/ClawdClock_1.1.0_x64-setup.exe"
     }
   },
-  "pub_date": "2026-06-18T13:35:54Z",
-  "version": "1.0.9"
+  "notes": "Fix: usage % staying stale for up to 5 min after a reset window passes",
+  "pub_date": "2026-07-01T05:10:50Z",
+  "version": "1.1.0"
 }
